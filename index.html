@@ -80,5 +80,37 @@
   <button>Summarize</button>
 
   <footer>© 2025 | Built by You</footer>
+
+  <script>
+    const uploadInput = document.querySelector('input[type="file"]');
+    const summarizeButton = document.querySelector('button');
+
+    summarizeButton.addEventListener('click', async () => {
+      if (!uploadInput.files.length) {
+        alert("Please upload a book first.");
+        return;
+      }
+
+      const formData = new FormData();
+      formData.append('file', uploadInput.files[0]);
+
+      try {
+        const response = await fetch('https://book-summarizer-backend.onrender.com/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+
+        if (response.ok) {
+          alert("Summary: " + data.summary);
+        } else {
+          alert("Error: " + data.error);
+        }
+      } catch (error) {
+        alert("Failed to connect to server.");
+      }
+    });
+  </script>
 </body>
 </html>
