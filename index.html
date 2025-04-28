@@ -1,77 +1,54 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8"/>
+  <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Book Summarizer</title>
   <style>
-    /* —— Full Reset & Body Setup —— */
+    /* Reset & Centered Base */
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    body, html {
-      width: 100%; height: 100%;
-      overflow: hidden;
+    body {
       background: #0f0f0f;
-      font-family: 'JetBrains Mono', monospace;
       color: #eee;
-    }
-
-    /* —— Matrix Canvas (Full-screen) —— */
-    #matrix {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      z-index: 1;
-    }
-
-    /* —— UI “Window” to block canvas behind it —— */
-    .ui-window {
-      position: relative;
-      z-index: 2;
-      width: 100%;
-      height: 100%;
-      display: flex; flex-direction: column;
-      justify-content: center; align-items: center;
-      pointer-events: none;
-    }
-    .ui-panel {
-      background: #0f0f0f;
-      padding: 2rem;
-      border-radius: 8px;
-      box-shadow: 0 0 20px rgba(0,0,0,0.8);
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;      /* vertically center */
+      align-items: center;          /* horizontally center */
+      height: 100vh;                /* full viewport */
       text-align: center;
-      pointer-events: auto;
-      max-width: 360px;
-      width: 90%;
     }
+
     h1 { font-size: 2rem; margin-bottom: 0.5rem; }
     p  { color: #888; margin-bottom: 1.5rem; }
 
-    /* —— Drag-Drop Zone —— */
+    /* Upload Box */
     #drop-zone {
       border: 2px dashed #666;
       border-radius: 6px;
-      width: 100%;
+      width: 320px;
       padding: 40px;
-      display: flex; justify-content: center; align-items: center;
+      display: flex;
+      justify-content: center;
+      align-items: center;
       color: #ccc;
       transition: background .3s, border-color .3s;
       cursor: pointer;
       margin-bottom: 1rem;
     }
-    #drop-zone.dragover {
-      background: #222; border-color: #999;
-    }
+    #drop-zone.dragover { background: #222; border-color: #999; }
     #drop-zone input { display: none; }
 
-    /* —— File Info —— */
+    /* File Info */
     #file-info {
       font-size: 0.9rem;
       color: #aaa;
       margin-bottom: 1rem;
+      max-width: 320px;
       word-break: break-all;
     }
 
-    /* —— Summarize Button —— */
+    /* Summarize Button */
     button {
       padding: 10px 24px;
       background: none;
@@ -82,11 +59,9 @@
       transition: background .3s, color .3s;
       font-family: inherit;
     }
-    button:hover {
-      background: #eee; color: #0f0f0f;
-    }
+    button:hover { background: #eee; color: #0f0f0f; }
 
-    /* —— Loading Overlay —— */
+    /* Loading Overlay (full-screen) */
     #loading-overlay {
       position: fixed; top: 0; left: 0;
       width: 100%; height: 100%;
@@ -94,7 +69,7 @@
       display: flex; justify-content: center; align-items: center;
       visibility: hidden; opacity: 0;
       transition: opacity .3s;
-      z-index: 4;
+      z-index: 2000;
     }
     #loading-overlay.show {
       visibility: visible; opacity: 1;
@@ -107,22 +82,21 @@
       animation: spin .8s linear infinite;
     }
     @keyframes spin {
-      0%   { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+      0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);}
     }
 
-    /* —— Summary Modal —— */
+    /* Modal (centered box) */
     #summary-modal {
       position: fixed; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
       background: #1a1a1a; color: #eee;
       width: 90%; max-width: 500px;
-      max-height: 70vh;
+      height: auto; max-height: 70vh;
       border-radius: 8px;
       display: flex; flex-direction: column;
       visibility: hidden; opacity: 0;
       transition: opacity .3s;
-      z-index: 5;
+      z-index: 3000;
     }
     #summary-modal.show {
       visibility: visible; opacity: 1;
@@ -140,49 +114,39 @@
       padding: 1rem; overflow-y: auto;
       white-space: pre-wrap; line-height: 1.5;
       font-size: 0.95rem;
-      flex: 1;
     }
     .modal-footer {
       padding: 0.75rem 1rem;
       border-top: 1px solid #333;
       display: flex; justify-content: flex-end; gap: 0.5rem;
     }
+    .modal-footer button { font-size: 0.9rem; }
 
-    /* —— Footer —— */
     footer {
       position: absolute; bottom: 15px;
       font-size: 0.8rem; color: #555;
-      z-index: 2; pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-  <!-- 1) Matrix Canvas -->
-  <canvas id="matrix"></canvas>
+  <h1>AI Book Summarizer</h1>
+  <p>Summarize any book in minutes.</p>
 
-  <!-- 2) UI “Window” -->
-  <div class="ui-window">
-    <div class="ui-panel">
-      <h1>AI Book Summarizer</h1>
-      <p>Summarize any book in minutes.</p>
+  <label id="drop-zone">
+    <input type="file" id="file-input" accept=".pdf,.epub" />
+    📄 Click or Drop a PDF/EPUB here
+  </label>
+  <div id="file-info"></div>
 
-      <label id="drop-zone">
-        <input type="file" id="file-input" accept=".pdf,.epub"/>
-        📄 Click or Drop a PDF/EPUB here
-      </label>
-      <div id="file-info"></div>
+  <button id="summarize-btn">Summarize</button>
 
-      <button id="summarize-btn">Summarize</button>
-    </div>
-  </div>
-
-  <!-- 3) Loading Overlay -->
+  <!-- Full-screen loader -->
   <div id="loading-overlay">
     <div class="spinner"></div>
   </div>
 
-  <!-- 4) Summary Modal -->
+  <!-- Centered summary modal -->
   <div id="summary-modal">
     <div class="modal-header">
       <h2>Summary</h2>
@@ -198,158 +162,90 @@
   <footer>© 2025 | Built by You</footer>
 
   <script>
-  // —— Matrix Rain Setup —— 
-  const canvas = document.getElementById('matrix');
-  const ctx    = canvas.getContext('2d');
-  let W = canvas.width  = innerWidth;
-  let H = canvas.height = innerHeight;
+    const dropZone = document.getElementById('drop-zone');
+    const fileInput = document.getElementById('file-input');
+    const fileInfo  = document.getElementById('file-info');
+    const summarizeBtn = document.getElementById('summarize-btn');
+    const loadingOverlay = document.getElementById('loading-overlay');
+    const summaryModal = document.getElementById('summary-modal');
+    const modalClose = document.getElementById('modal-close');
+    const summaryContent = document.getElementById('summary-content');
+    const copyBtn = document.getElementById('copy-btn');
+    const downloadBtn = document.getElementById('download-btn');
 
-  // Your word list
-  const words = [
-    'Knowledge','Power','Wisdom','Truth','Insight','Mastery','Strength','Clarity',
-    'Intelligence','Perception','Awareness','Vision','Genius','Revelation',
-    'Sovereignty','Understanding','Illumination','Authority','Strategy','Dominion',
-    'Consciousness','Discovery','Discipline','Awakening','Willpower','Purpose',
-    'Influence','Cognition','Innovation','Legacy','Enlightenment','Intuition',
-    'Command','Ascendancy','Fortitude','Honor','Reality','Foresight','Memory',
-    'Adaptation','Ingenuity','Reason','Potential','Sagacity','Aptitude','Precision',
-    'Curiosity','Alchemy','Logos','Ethos','Praxis','Nexus','Synthesis','Momentum',
-    'Transcendence'
-  ];
+    let selectedFile = null, lastSummary = '';
 
-  const fontSize   = 24;
-  const columns    = Math.floor(W / fontSize);
-  const lineLength = 5; // words per horizontal strip
+    // Drag & drop styling + file selection
+    ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
+      ev.preventDefault(); dropZone.classList.add('dragover');
+    }));
+    ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => {
+      ev.preventDefault(); dropZone.classList.remove('dragover');
+    }));
+    dropZone.addEventListener('drop', ev => {
+      if (ev.dataTransfer.files.length) {
+        ev.preventDefault();
+        handleFile(ev.dataTransfer.files[0]);
+      }
+    });
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) handleFile(fileInput.files[0]);
+    });
 
-  // Each "drop" holds a vertical position and a horizontal strip of words
-  const drops = Array.from({length: columns}, () => ({
-    y: Math.random() * H / fontSize,
-    strip: Array.from({length: lineLength}, () =>
-      words[Math.floor(Math.random() * words.length)]
-    )
-  }));
+    function handleFile(file) {
+      selectedFile = file;
+      fileInfo.textContent = `📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
+    }
 
-  function drawMatrix() {
-    // trail fade
-    ctx.fillStyle = 'rgba(0,0,0,0.05)';
-    ctx.fillRect(0, 0, W, H);
+    // Summarize click
+    summarizeBtn.addEventListener('click', async () => {
+      if (!selectedFile) return alert('Please upload a file first.');
+      loadingOverlay.classList.add('show');
+      summaryContent.textContent = '';
 
-    ctx.fillStyle = '#FFF';
-    ctx.font = `${fontSize}px monospace`;
+      const fd = new FormData();
+      fd.append('file', selectedFile);
 
-    drops.forEach((drop, i) => {
-      const x0 = i * fontSize;
-      const y  = drop.y * fontSize;
-
-      // draw the horizontal strip
-      drop.strip.forEach((w, j) => {
-        ctx.fillText(w, x0 + j * fontSize, y);
-      });
-
-      // advance downward
-      drop.y += 0.2; // slower fall—tweak as you like
-
-      // reset once off-screen
-      if (drop.y * fontSize > H + fontSize) {
-        drop.y = 0;
-        drop.strip = Array.from({length: lineLength}, () =>
-          words[Math.floor(Math.random() * words.length)]
-        );
+      try {
+        const res = await fetch('https://book-summarizer-backend.onrender.com/upload', {
+          method: 'POST', body: fd
+        });
+        const data = await res.json();
+        lastSummary = data.summary || data.excerpt || 'No summary available.';
+        summaryContent.textContent = lastSummary;
+        summaryModal.classList.add('show');
+      } catch (err) {
+        console.error(err);
+        alert('Error summarizing file.');
+      } finally {
+        loadingOverlay.classList.remove('show');
       }
     });
 
-    requestAnimationFrame(drawMatrix);
-  }
+    // Modal close
+    modalClose.addEventListener('click', () =>
+      summaryModal.classList.remove('show')
+    );
+    window.addEventListener('click', ev => {
+      if (ev.target === summaryModal) summaryModal.classList.remove('show');
+    });
 
-  drawMatrix();
-
-  // handle resize
-  window.addEventListener('resize', () => {
-    W = canvas.width  = innerWidth;
-    H = canvas.height = innerHeight;
-  });
-
-
-  // —— File & UI Logic (unchanged) —— 
-  const dropZone        = document.getElementById('drop-zone');
-  const fileInput       = document.getElementById('file-input');
-  const fileInfo        = document.getElementById('file-info');
-  const summarizeBtn    = document.getElementById('summarize-btn');
-  const loadingOverlay  = document.getElementById('loading-overlay');
-  const summaryModal    = document.getElementById('summary-modal');
-  const modalClose      = document.getElementById('modal-close');
-  const summaryContent  = document.getElementById('summary-content');
-  const copyBtn         = document.getElementById('copy-btn');
-  const downloadBtn     = document.getElementById('download-btn');
-
-  let selectedFile = null, lastSummary = '';
-
-  ['dragenter','dragover'].forEach(evt =>
-    dropZone.addEventListener(evt, e => {
-      e.preventDefault(); dropZone.classList.add('dragover');
-    })
-  );
-  ['dragleave','drop'].forEach(evt =>
-    dropZone.addEventListener(evt, e => {
-      e.preventDefault(); dropZone.classList.remove('dragover');
-    })
-  );
-  dropZone.addEventListener('drop', e => {
-    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
-  });
-  dropZone.addEventListener('click', () => fileInput.click());
-  fileInput.addEventListener('change', () => {
-    if (fileInput.files[0]) handleFile(fileInput.files[0]);
-  });
-
-  function handleFile(file) {
-    selectedFile = file;
-    fileInfo.textContent = `📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
-  }
-
-  summarizeBtn.addEventListener('click', async () => {
-    if (!selectedFile) return alert('Please upload a file first.');
-    loadingOverlay.classList.add('show');
-    summaryContent.textContent = '';
-    const fd = new FormData(); fd.append('file', selectedFile);
-    try {
-      const res  = await fetch('https://book-summarizer-backend.onrender.com/upload', {
-        method: 'POST', body: fd
-      });
-      const data = await res.json();
-      lastSummary = data.summary || data.excerpt || 'No summary available.';
-      summaryContent.textContent = lastSummary;
-      summaryModal.classList.add('show');
-    } catch(err) {
-      console.error(err);
-      alert('Error summarizing file.');
-    } finally {
-      loadingOverlay.classList.remove('show');
-    }
-  });
-
-  modalClose.addEventListener('click', () =>
-    summaryModal.classList.remove('show')
-  );
-  window.addEventListener('click', e => {
-    if (e.target === summaryModal) summaryModal.classList.remove('show');
-  });
-
-  copyBtn.addEventListener('click', () => {
-    navigator.clipboard.writeText(lastSummary)
-      .then(_=> alert('Copied!'))
-      .catch(_=> alert('Copy failed.'));
-  });
-
-  downloadBtn.addEventListener('click', () => {
-    const blob = new Blob([lastSummary], {type:'text/plain'});
-    const url  = URL.createObjectURL(blob);
-    const a    = document.createElement('a');
-    a.href     = url;
-    a.download = (selectedFile?.name||'summary') + '.txt';
-    a.click();
-    URL.revokeObjectURL(url);
-  });
+    // Copy & Download
+    copyBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(lastSummary)
+        .then(_=> alert('Copied!'))
+        .catch(_=> alert('Copy failed.'));
+    });
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([lastSummary], {type:'text/plain'});
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
+      a.href     = url;
+      a.download = (selectedFile?.name||'summary') + '.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    });
   </script>
 </body>
 </html>
