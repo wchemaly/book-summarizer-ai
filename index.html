@@ -12,36 +12,36 @@
       --border:#555555;
       --error: #ff6b6b;
     }
-    * { box-sizing:border-box;margin:0;padding:0; }
+    * { box-sizing:border-box; margin:0; padding:0; }
     body {
       background: var(--bg);
       color: var(--fg);
       font-family:'JetBrains Mono',monospace;
-      display:flex;align-items:center;justify-content:center;
-      height:100vh;text-align:center;
+      display:flex; align-items:center; justify-content:center;
+      height:100vh; text-align:center;
     }
 
     h1 { font-size:2rem; margin-bottom:.5rem; }
-    p  { color:var(--muted); margin-bottom:1rem; }
+    p  { color:var(--muted); margin-bottom:.75rem; }
 
-    /* wrap everything in a single panel with its own stacking context */
+    /* ► Panel (wider + tighter gaps) */
     .panel {
       position:relative;
       z-index:10;
-      width:320px;
-      display:flex;flex-direction:column;align-items:center;
-      gap:.75rem;
+      width:400px;
+      display:flex; flex-direction:column; align-items:center;
+      gap:.5rem;
     }
 
-    /* drag/drop box */
+    /* ► Drag & Drop box */
     #drop-zone {
-      width:100%; padding:2rem;
+      width:100%; padding:1.5rem;
       border:2px dashed var(--border);
       border-radius:6px;
       color:var(--muted);
-      transition:background .3s,border-color .3s,color .3s;
+      transition: background .3s, border-color .3s, color .3s;
       cursor:pointer;
-      display:flex;flex-direction:column;align-items:center;gap:.5rem;
+      display:flex; flex-direction:column; align-items:center; gap:.5rem;
     }
     #drop-zone.dragover {
       background:#1a1a1a;
@@ -49,136 +49,123 @@
       color:var(--fg);
     }
     #drop-zone svg {
-      width:32px;height:32px;
+      width:32px; height:32px;
       fill:var(--muted);
-      transition:fill .3s;
+      transition: fill .3s;
     }
     #drop-zone.dragover svg { fill:var(--fg); }
     #drop-zone input { display:none; }
 
-    /* file info + clear */
+    /* ► File info + clear */
     #file-info {
       font-size:.85rem;
       color:var(--muted);
-      display:flex;align-items:center;gap:.5rem;
+      display:flex; align-items:center; gap:.5rem;
       word-break:break-all;
     }
     #clear-btn {
-      background:none;border:none;
+      background:none; border:none;
       color:var(--error);
-      font-size:1rem;
-      cursor:pointer;
+      font-size:1rem; cursor:pointer;
       visibility:hidden;
     }
 
-    /* summary‐length toggles */
+    /* ► Length toggles (tight under drop-zone) */
     #length-control {
-      display:flex;gap:.5rem;
-      pointer-events:auto;     /* re-enable pointer events */
+      display:flex; gap:.25rem;
+      pointer-events:auto;
     }
     .length-btn {
       padding:.4rem .8rem;
       border:1px solid var(--fg);
-      background:none;
-      color:var(--fg);
-      border-radius:4px;
-      cursor:pointer;
-      transition:background .3s,color .3s;
+      background:none; color:var(--fg);
+      border-radius:4px; cursor:pointer;
+      transition: background .2s, color .2s;
       font-size:.9rem;
     }
     .length-btn:hover { background:var(--fg); color:var(--bg); }
     .length-btn.active {
-      background:var(--fg);
-      color:var(--bg);
+      background:var(--fg); color:var(--bg);
     }
 
-    /* summarize button */
+    /* ► Summarize button */
     #summarize-btn {
       padding:.6rem 1.2rem;
-      background:var(--fg);
-      color:var(--bg);
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-      transition:opacity .3s;
+      background:var(--fg); color:var(--bg);
+      border:none; border-radius:6px;
+      cursor:pointer; transition: opacity .2s;
     }
     #summarize-btn:disabled {
-      opacity:.5;
-      cursor:not-allowed;
+      opacity:.5; cursor:not-allowed;
     }
 
-    /* full-screen loader */
+    /* ► Loading overlay */
     #loading-overlay {
-      position:fixed;top:0;left:0;
-      width:100%;height:100%;
+      position:fixed; top:0; left:0;
+      width:100%; height:100%;
       background:rgba(0,0,0,0.8);
-      display:flex;align-items:center;justify-content:center;
-      visibility:hidden;opacity:0;
-      transition:opacity .3s;
+      display:flex; align-items:center; justify-content:center;
+      visibility:hidden; opacity:0; transition: opacity .2s;
       z-index:20;
     }
     #loading-overlay.show {
-      visibility:visible;opacity:1;
+      visibility:visible; opacity:1;
     }
     .spinner {
       border:8px solid var(--border);
       border-top:8px solid var(--fg);
       border-radius:50%;
-      width:60px;height:60px;
-      animation:spin .8s linear infinite;
+      width:60px; height:60px;
+      animation: spin .8s linear infinite;
     }
-    @keyframes spin { to{transform:rotate(360deg);} }
+    @keyframes spin {
+      to { transform:rotate(360deg); }
+    }
 
-    /* summary modal */
+    /* ► Summary modal */
     #summary-modal {
-      position:fixed;top:50%;left:50%;
+      position:fixed; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      background:var(--bg);color:var(--fg);
-      width:90%;max-width:500px;max-height:70vh;
+      background:var(--bg); color:var(--fg);
+      width:90%; max-width:500px; max-height:70vh;
       border-radius:8px;
-      display:flex;flex-direction:column;
-      visibility:hidden;opacity:0;
-      transition:opacity .3s;
+      display:flex; flex-direction:column;
+      visibility:hidden; opacity:0; transition: opacity .2s;
       z-index:30;
     }
     #summary-modal.show {
-      visibility:visible;opacity:1;
+      visibility:visible; opacity:1;
     }
     .modal-header {
-      display:flex;justify-content:space-between;align-items:center;
-      padding:1rem;border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
+      padding:1rem; border-bottom:1px solid var(--border);
     }
     .modal-header h2 { font-size:1.25rem; }
     .close-btn {
-      background:none;border:none;
-      color:var(--fg);font-size:1.5rem;
+      background:none; border:none;
+      color:var(--fg); font-size:1.5rem;
       cursor:pointer;
     }
     #summary-content {
-      padding:1rem;
-      overflow-y:auto;
-      white-space:pre-wrap;
-      line-height:1.5;
-      flex:1;
-      font-size:.95rem;
+      padding:1rem; overflow-y:auto;
+      white-space:pre-wrap; line-height:1.5;
+      flex:1; font-size:.95rem;
     }
     .modal-footer {
-      padding:.75rem 1rem;
-      border-top:1px solid var(--border);
-      display:flex;gap:.5rem;justify-content:flex-end;
+      padding:.75rem 1rem; border-top:1px solid var(--border);
+      display:flex; gap:.5rem; justify-content:flex-end;
     }
     .modal-footer button {
       padding:.5rem 1rem;
-      background:var(--fg);
-      color:var(--bg);
-      border:none;border-radius:4px;
-      cursor:pointer;
-      font-size:.9rem;
+      background:var(--fg); color:var(--bg);
+      border:none; border-radius:4px;
+      cursor:pointer; font-size:.9rem;
     }
 
+    /* ► Footer */
     footer {
-      position:absolute;bottom:15px;
-      font-size:.75rem;color:var(--muted);
+      position:absolute; bottom:15px;
+      font-size:.75rem; color:var(--muted);
       z-index:10;
     }
   </style>
@@ -191,9 +178,10 @@
 
     <label id="drop-zone">
       <svg viewBox="0 0 24 24">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7z"/><path d="M5 18h14v2H5z"/>
+        <path d="M19 9h-4V3H9v6H5l7 7 7-7z"/>
+        <path d="M5 18h14v2H5z"/>
       </svg>
-      <span>Click or Drop a PDF/EPUB here</span>
+      <span>Click or drop a PDF/EPUB here</span>
       <input type="file" id="file-input" accept=".pdf,.epub"/>
     </label>
 
@@ -244,7 +232,7 @@
         lastSummary   = '',
         summaryLength = 'medium';
 
-    /* file handlers */
+    /* handle file selection */
     function handleFile(file){
       selectedFile = file;
       fileInfo.textContent = `📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
@@ -253,22 +241,22 @@
     }
 
     /* drag & drop */
-    ['dragenter','dragover'].forEach(e=>
-      dropZone.addEventListener(e,ev=>{ev.preventDefault(); dropZone.classList.add('dragover');})
+    ['dragenter','dragover'].forEach(evt =>
+      dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('dragover'); })
     );
-    ['dragleave','drop'].forEach(e=>
-      dropZone.addEventListener(e,ev=>{ev.preventDefault(); dropZone.classList.remove('dragover');})
+    ['dragleave','drop'].forEach(evt =>
+      dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('dragover'); })
     );
-    dropZone.addEventListener('drop', ev=>{
-      if(ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
+    dropZone.addEventListener('drop', e => {
+      if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
     });
-    dropZone.addEventListener('click', ()=>fileInput.click());
-    fileInput.addEventListener('change', ()=> {
-      if(fileInput.files.length) handleFile(fileInput.files[0]);
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length) handleFile(fileInput.files[0]);
     });
 
-    /* clear */
-    clearBtn.addEventListener('click', ()=>{
+    /* clear file */
+    clearBtn.addEventListener('click', () => {
       selectedFile = null;
       fileInput.value = '';
       fileInfo.textContent = '';
@@ -276,18 +264,18 @@
       clearBtn.style.visibility = 'hidden';
     });
 
-    /* length selection */
-    lengthBtns.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        lengthBtns.forEach(b=>b.classList.remove('active'));
+    /* length toggles */
+    lengthBtns.forEach(btn => {
+      btn.addEventListener('click', () => {
+        lengthBtns.forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         summaryLength = btn.dataset.length;
       });
     });
 
     /* summarize */
-    summarizeBtn.addEventListener('click', async ()=>{
-      if(!selectedFile) return;
+    summarizeBtn.addEventListener('click', async () => {
+      if (!selectedFile) return;
       summarizeBtn.disabled = true;
       loadingOverlay.classList.add('show');
       summaryContent.textContent = '';
@@ -298,15 +286,14 @@
       fd.append('length', summaryLength);
 
       try {
-        const res = await fetch('https://book-summarizer-backend.onrender.com/upload',{
-          method:'POST',
-          body: fd
+        const res = await fetch('https://book-summarizer-backend.onrender.com/upload', {
+          method:'POST', body:fd
         });
         const data = await res.json();
-        lastSummary = data.summary||data.excerpt||'No summary available.';
+        lastSummary = data.summary || data.excerpt || 'No summary available.';
         summaryContent.textContent = lastSummary;
         summaryModal.classList.add('show');
-      } catch(err){
+      } catch(err) {
         console.error(err);
         alert('Error summarizing file.');
       } finally {
@@ -316,26 +303,26 @@
     });
 
     /* modal close */
-    modalClose.addEventListener('click', ()=> summaryModal.classList.remove('show'));
-    window.addEventListener('keydown', ev=>{
-      if(ev.key==='Escape') summaryModal.classList.remove('show');
+    modalClose.addEventListener('click', () => summaryModal.classList.remove('show'));
+    window.addEventListener('keydown', e => {
+      if (e.key === 'Escape') summaryModal.classList.remove('show');
     });
-    window.addEventListener('click', ev=>{
-      if(ev.target===summaryModal) summaryModal.classList.remove('show');
+    window.addEventListener('click', e => {
+      if (e.target === summaryModal) summaryModal.classList.remove('show');
     });
 
     /* copy & download */
-    copyBtn.addEventListener('click', ()=>{
+    copyBtn.addEventListener('click', () => {
       navigator.clipboard.writeText(lastSummary)
         .then(()=> alert('Copied!'))
         .catch(()=> alert('Copy failed.'));
     });
-    downloadBtn.addEventListener('click', ()=>{
-      const blob = new Blob([lastSummary],{type:'text/plain'});
+    downloadBtn.addEventListener('click', () => {
+      const blob = new Blob([lastSummary], { type:'text/plain' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href     = url;
-      a.download = (selectedFile?.name||'summary')+'.txt';
+      a.download = (selectedFile?.name||'summary') + '.txt';
       a.click();
       URL.revokeObjectURL(url);
     });
