@@ -6,159 +6,194 @@
   <title>AI Book Summarizer</title>
   <style>
     :root {
-      --bg: #0f0f0f;
-      --fg: #ffffff;
-      --muted: #bbbbbb;
-      --border: #ffffff;
-      --accent: #ffffff;
-      --window-bg: #111111;
+      --bg-start: #0f0f0f;
+      --bg-end:   #181818;
+      --fg:       #ffffff;
+      --muted:    #bbbbbb;
+      --border:   #ffffff;
+      --accent:   #ffffff;
+      --window-bg:#111111;
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0 }
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0 }
     body {
-      background: var(--bg);
+      background: linear-gradient(180deg, var(--bg-start), var(--bg-end));
       color: var(--fg);
       font-family: 'JetBrains Mono', monospace;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
+      display: flex; justify-content:center; align-items:center;
+      min-height:100vh;
     }
-    h1 { font-size: 2.4rem; margin-bottom: .4rem; }
-    p  { font-size: 1rem; color: var(--muted); margin-bottom: .8rem; }
     .panel {
-      width: 360px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: .8rem;
+      width:360px;
+      display:flex; flex-direction:column; align-items:center;
+      gap:1.2rem;
+    }
+    h1 {
+      font-size:2.6rem;
+      font-weight:700;
+      letter-spacing:.5px;
+    }
+    p {
+      font-size:1.1rem;
+      color:var(--muted);
+      margin-top:-.4rem;
     }
     #drop-zone {
-      position: relative;
-      width: 100%;
-      padding: 1.8rem;
-      border: 2px dashed var(--border);
-      border-radius: 6px;
-      color: var(--muted);
-      background: var(--window-bg);
-      transition: background .2s, border-color .2s;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: .6rem;
-      font-size: 1rem;
-      cursor: pointer;
+      position:relative;
+      width:100%; padding:2rem;
+      border:3px dashed var(--border);
+      border-radius:6px;
+      background:var(--window-bg);
+      display:flex;flex-direction:column;align-items:center;gap:1rem;
+      transition:background .2s, border-color .2s;
+      cursor:pointer;
     }
-    #drop-zone.dragover {
-      background: rgba(255,255,255,0.1);
-      border-color: var(--accent);
-      color: var(--fg);
+    #drop-zone:hover, #drop-zone:focus-within {
+      background:rgba(255,255,255,0.1);
+      border-color:var(--accent);
     }
     #drop-zone svg {
-      width: 32px; height: 32px; fill: var(--muted);
-      transition: fill .2s;
+      width:48px; height:48px;
+      fill:var(--muted);
+      transition:fill .2s;
     }
-    #drop-zone.dragover svg { fill: var(--fg) }
+    #drop-zone:hover svg, #drop-zone:focus-within svg {
+      fill:var(--accent);
+    }
     #drop-zone input {
-      position: absolute; top: 0; left: 0;
-      width: 100%; height: 100%;
-      opacity: 0; cursor: pointer;
+      position:absolute; top:0; left:0;
+      width:100%; height:100%; opacity:0; cursor:pointer;
     }
     .microcopy {
-      font-size: .75rem; color: var(--muted);
+      font-size:.85rem;
+      color:var(--muted);
+      text-align:left;
+      width:100%;
     }
     #file-info {
-      font-size: .9rem; color: var(--muted);
-      word-break: break-all;
-      text-align: left;
-      width: 100%;
+      font-size:.95rem;
+      color:var(--muted);
+      width:100%;
+      text-align:left;
+      word-break:break-all;
     }
     #clear-btn {
-      background: none; border: none;
-      color: var(--error); font-size: 1.2rem;
-      cursor: pointer; visibility: hidden;
-      align-self: flex-end;
+      background:none; border:none;
+      color:var(--error); font-size:1.2rem;
+      cursor:pointer; visibility:hidden;
+      align-self:flex-end;
     }
-    #length-control {
-      width: 100%;
+    #file-info.visible + #clear-btn { visibility:visible }
+    .controls {
+      display:flex; gap:.6rem; width:100%;
     }
-    select#length-control {
-      width: 100%; padding: .6rem;
-      background: var(--window-bg); color: var(--fg);
-      border: 1px solid var(--border); border-radius: 4px;
-      font-size: .95rem; cursor: pointer;
+    .length-btn {
+      flex:1;
+      padding:.6rem;
+      border:1px solid var(--border);
+      background:var(--window-bg);
+      color:var(--fg);
+      font-size:1rem;
+      cursor:pointer;
+      transition:background .2s, color .2s;
+    }
+    .length-btn.active, .length-btn:hover {
+      background:var(--accent);
+      color:var(--bg);
     }
     #summarize-btn {
-      width: 100%; padding: .8rem;
-      background: var(--accent); color: var(--bg);
-      border: none; border-radius: 6px;
-      font-size: 1.1rem; font-weight: bold;
-      cursor: pointer; transition: opacity .2s;
+      width:100%;
+      padding:1rem;
+      background:var(--accent);
+      color:var(--bg);
+      font-size:1.2rem;
+      font-weight:700;
+      border:none;
+      border-radius:6px;
+      cursor:pointer;
+      transition:opacity .2s, transform .1s;
     }
-    #summarize-btn:disabled {
-      opacity: .5; cursor: not-allowed;
+    #summarize-btn:hover { transform:scale(1.02) }
+    #summarize-btn:disabled { opacity:.5; cursor:not-allowed }
+    .secondary-btn {
+      padding:.8rem 1.2rem;
+      background:transparent;
+      border:1px solid var(--border);
+      color:var(--fg);
+      font-size:1rem;
+      cursor:pointer;
+      border-radius:6px;
+      transition:background .2s;
     }
+    .secondary-btn:hover { background:rgba(255,255,255,0.1) }
     #loading-overlay {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex; align-items: center; justify-content: center;
-      visibility: hidden; opacity: 0; transition: opacity .2s;
-      z-index: 20;
+      position:fixed; top:0; left:0;
+      width:100%; height:100%;
+      background:rgba(0,0,0,0.8);
+      display:flex;justify-content:center;align-items:center;
+      visibility:hidden;opacity:0;
+      transition:opacity .2s;
+      z-index:20;
     }
-    #loading-overlay.show {
-      visibility: visible; opacity: 1;
-    }
+    #loading-overlay.show { visibility:visible;opacity:1 }
     .spinner {
-      border: 8px solid var(--border);
-      border-top: 8px solid var(--fg);
-      border-radius: 50%;
-      width: 60px; height: 60px;
-      animation: spin .8s linear infinite;
+      border:8px solid var(--border);
+      border-top:8px solid var(--fg);
+      border-radius:50%;
+      width:60px; height:60px;
+      animation:spin .8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes spin { to{transform:rotate(360deg)} }
     #summary-modal {
-      position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      width: 90%; max-width: 500px;
-      background: var(--window-bg); color: var(--fg);
-      border-radius: 8px;
-      visibility: hidden; opacity: 0; transition: opacity .2s;
-      z-index: 30;
-      display: flex; flex-direction: column;
+      position:fixed;top:50%;left:50%;
+      transform:translate(-50%,-50%);
+      width:90%;max-width:500px;
+      background:var(--window-bg);
+      border-radius:8px;
+      visibility:hidden;opacity:0;
+      transition:opacity .2s;
+      z-index:30;
+      display:flex;flex-direction:column;
     }
-    #summary-modal.show {
-      visibility: visible; opacity: 1;
-    }
+    #summary-modal.show { visibility:visible;opacity:1 }
     .modal-header {
-      padding: 1rem; border-bottom: 1px solid var(--border);
-      display: flex; justify-content: space-between;
-      align-items: center;
+      padding:1rem 1.2rem;
+      border-bottom:1px solid var(--border);
+      display:flex;justify-content:space-between;align-items:center;
     }
-    .modal-header h2 { font-size: 1.3rem }
+    .modal-header h2 {
+      font-size:1.4rem;
+      font-weight:700;
+    }
     .close-btn {
-      background: none; border: none;
-      color: var(--fg); font-size: 1.5rem; cursor: pointer;
+      background:none;border:none;font-size:1.5rem;cursor:pointer;
+      color:var(--fg);
     }
     #summary-content {
-      padding: 1rem; overflow-y: auto;
-      white-space: pre-wrap; line-height: 1.5;
-      flex: 1; font-size: .95rem;
+      padding:1rem 1.2rem;
+      overflow-y:auto;
+      white-space:pre-wrap;line-height:1.6;
+      font-size:1rem;
+      flex:1;
     }
     .modal-footer {
-      padding: .75rem 1rem; border-top: 1px solid var(--border);
-      display: flex; justify-content: flex-end; gap: .5rem;
+      padding:.8rem 1.2rem;
+      border-top:1px solid var(--border);
+      display:flex;justify-content:flex-end;gap:.6rem;
     }
     .modal-footer button {
-      padding: .5rem 1rem;
-      background: var(--fg); color: var(--bg);
-      border: none; border-radius: 4px;
-      cursor: pointer; font-size: .95rem;
+      padding:.6rem 1rem;
+      background:var(--accent);color:var(--bg);
+      border:none;border-radius:4px;
+      font-size:1rem;cursor:pointer;
     }
     footer {
-      margin-top: 1rem; padding-top: .5rem;
-      border-top: 1px solid var(--border);
-      font-size: .75rem; color: var(--muted);
+      position:fixed; bottom:0; left:50%; transform:translateX(-50%);
+      width:100%; max-width:360px;
+      padding:.6rem 0;
+      border-top:1px solid var(--border);
+      background:var(--bg);
+      font-size:.75rem; color:var(--muted);
+      text-align:center;
     }
   </style>
 </head>
@@ -167,23 +202,20 @@
     <h1>AI Book Summarizer</h1>
     <p>Summarize any book in minutes.</p>
     <label id="drop-zone">
-      <svg viewBox="0 0 24 24">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7z"/>
-        <path d="M5 18h14v2H5z"/>
-      </svg>
+      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7z"/><path d="M5 18h14v2H5z"/></svg>
       <span>Click or drop PDF/EPUB</span>
       <input type="file" id="file-input" accept=".pdf,.epub"/>
     </label>
     <div class="microcopy">Max 20 MB. PDF, EPUB accepted. Files deleted after use.</div>
     <div id="file-info" role="status"></div>
     <button id="clear-btn">×</button>
-    <select id="length-control" aria-label="Summary length">
-      <option value="short">Short</option>
-      <option value="medium" selected>Medium</option>
-      <option value="long">Long</option>
-    </select>
+    <div class="controls" id="length-control" role="radiogroup">
+      <button class="length-btn" data-length="short">Short</button>
+      <button class="length-btn active" data-length="medium">Medium</button>
+      <button class="length-btn" data-length="long">Long</button>
+    </div>
     <button id="summarize-btn" disabled>Summarize</button>
-    <a href="sample.pdf" class="microcopy">Download sample PDF</a>
+    <button class="secondary-btn" onclick="window.location='sample.pdf'">Sample PDF</button>
   </div>
   <div id="loading-overlay"><div class="spinner"></div></div>
   <div id="summary-modal" role="dialog" aria-modal="true">
@@ -199,58 +231,60 @@
   </div>
   <footer>© 2025 | Built by You</footer>
   <script>
-    const dz = document.getElementById('drop-zone');
-    const fi = document.getElementById('file-input');
-    const fo = document.getElementById('file-info');
-    const cb = document.getElementById('clear-btn');
-    const lc = document.getElementById('length-control');
-    const sb = document.getElementById('summarize-btn');
-    const lo = document.getElementById('loading-overlay');
-    const md = document.getElementById('summary-modal');
-    const mc = document.getElementById('modal-close');
-    const sc = document.getElementById('summary-content');
-    const cp = document.getElementById('copy-btn');
-    const dl = document.getElementById('download-btn');
-    let file, sum, len='medium';
+    const dz=document.getElementById('drop-zone'),
+          fi=document.getElementById('file-input'),
+          fo=document.getElementById('file-info'),
+          cb=document.getElementById('clear-btn'),
+          lb=document.querySelectorAll('.length-btn'),
+          sb=document.getElementById('summarize-btn'),
+          lo=document.getElementById('loading-overlay'),
+          md=document.getElementById('summary-modal'),
+          mc=document.getElementById('modal-close'),
+          sc=document.getElementById('summary-content'),
+          cp=document.getElementById('copy-btn'),
+          dl=document.getElementById('download-btn');
+    let file,sum,len='medium';
     function hF(f){
       file=f;
       fo.textContent=`📄 ${f.name} (${(f.size/1e6).toFixed(2)} MB)`;
-      sb.disabled=false; cb.style.visibility='visible';
+      fo.classList.add('visible');
+      sb.disabled=false;
+      cb.style.visibility='visible';
     }
-    ['dragenter','dragover'].forEach(e=>
-      dz.addEventListener(e,a=>{a.preventDefault();dz.classList.add('dragover')})
-    );
-    ['dragleave','drop'].forEach(e=>
-      dz.addEventListener(e,a=>{a.preventDefault();dz.classList.remove('dragover')})
-    );
+    ['dragenter','dragover'].forEach(e=>dz.addEventListener(e,a=>{a.preventDefault();dz.classList.add('dragover')}));
+    ['dragleave','drop'].forEach(e=>dz.addEventListener(e,a=>{a.preventDefault();dz.classList.remove('dragover')}));
     dz.addEventListener('drop',e=>e.dataTransfer.files.length&&hF(e.dataTransfer.files[0]));
     fi.addEventListener('change',()=>fi.files.length&&hF(fi.files[0]));
     cb.addEventListener('click',()=>{
-      file=null;fi.value='';fo.textContent='';sb.disabled=true;cb.style.visibility='hidden';
+      file=null;fi.value='';fo.textContent='';fo.classList.remove('visible');
+      sb.disabled=true;cb.style.visibility='hidden';
     });
-    lc.addEventListener('change',()=>len=lc.value);
+    lb.forEach(b=>b.addEventListener('click',()=>{
+      lb.forEach(x=>x.classList.remove('active'));
+      b.classList.add('active');
+      len=b.dataset.length;
+    }));
     sb.addEventListener('click',async()=>{
       if(!file)return;
-      sb.disabled=true; lo.classList.add('show'); sc.textContent=''; md.classList.remove('show');
+      sb.disabled=true;lo.classList.add('show');sc.textContent='';md.classList.remove('show');
       const fd=new FormData();fd.append('file',file);fd.append('length',len);
       try{
         const r=await fetch('https://book-summarizer-backend.onrender.com/upload',{method:'POST',body:fd});
         const d=await r.json();
         sum=d.summary||d.excerpt||'No summary';
         sc.textContent=sum;md.classList.add('show');
-      }catch{alert('Error')}
+      }catch{}
       lo.classList.remove('show');sb.disabled=false;
     });
-    mc.addEventListener('click',()=>md.classList.remove('show'));
+    mc.onclick=()=>md.classList.remove('show');
     window.addEventListener('click',e=>e.target===md&&md.classList.remove('show'));
     window.addEventListener('keyup',e=>e.key==='Escape'&&md.classList.remove('show'));
     cp.addEventListener('click',()=>navigator.clipboard.writeText(sum));
     dl.addEventListener('click',()=>{
-      const b=new Blob([sum],{type:'text/plain'});
-      const u=URL.createObjectURL(b);
-      const a=document.createElement('a');
-      a.href=u;a.download=(file?.name||'summary')+'.txt';a.click();
-      URL.revokeObjectURL(u);
+      const b=new Blob([sum],{type:'text/plain'}),
+            u=URL.createObjectURL(b),
+            a=document.createElement('a');
+      a.href=u;a.download=(file?.name||'summary')+'.txt';a.click();URL.revokeObjectURL(u);
     });
   </script>
 </body>
