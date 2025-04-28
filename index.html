@@ -5,7 +5,6 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>AI Book Summarizer</title>
   <style>
-    /* [your existing style, keep it] */
     body {
       margin: 0;
       padding: 0;
@@ -15,12 +14,22 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+      justify-content: flex-start;
       min-height: 100vh;
       text-align: center;
+      padding-top: 40px;
     }
-    h1 { font-size: 28px; margin-bottom: 10px; }
-    p { color: #888888; margin-bottom: 30px; }
+
+    h1 {
+      font-size: 28px;
+      margin-bottom: 10px;
+    }
+
+    p {
+      color: #888888;
+      margin-bottom: 30px;
+    }
+
     .upload {
       border: 1px dashed #666;
       padding: 40px;
@@ -29,8 +38,19 @@
       cursor: pointer;
       background-color: transparent;
       color: #eee;
+      margin-bottom: 10px;
     }
-    .upload:hover { background-color: #1a1a1a; }
+
+    .upload:hover {
+      background-color: #1a1a1a;
+    }
+
+    #file-name {
+      margin-top: 8px;
+      font-size: 14px;
+      color: #aaa;
+    }
+
     button {
       margin-top: 20px;
       padding: 12px 24px;
@@ -42,60 +62,97 @@
       cursor: pointer;
       transition: 0.3s ease;
     }
-    button:hover { background-color: #eee; color: #0f0f0f; }
+
+    button:hover {
+      background-color: #eee;
+      color: #0f0f0f;
+    }
+
+    #loading {
+      margin-top: 20px;
+      font-size: 16px;
+      display: none;
+      color: #888;
+    }
+
+    #summary {
+      margin-top: 40px;
+      padding: 20px;
+      background: #1a1a1a;
+      border-radius: 8px;
+      max-width: 600px;
+      text-align: left;
+      white-space: pre-wrap;
+    }
+
     footer {
-      position: fixed;
-      bottom: 15px;
+      margin-top: 60px;
       font-size: 12px;
       color: #555;
     }
   </style>
 </head>
 <body>
+  <h1>AI Book Summarizer</h1>
+  <p>Summarize any book in minutes.</p>
 
-<h1>AI Book Summarizer</h1>
-<p>Summarize any book in minutes.</p>
+  <label class="upload">
+    <input type="file" id="fileInput" style="display: none" />
+    Click to upload a book (PDF/EPUB)
+  </label>
 
-<label class="upload">
-  <input type="file" id="fileInput" style="display: none" />
-  Click to upload a book (PDF/EPUB)
-</label>
+  <div id="file-name"></div>
 
-<button id="summarizeBtn">Summarize</button>
+  <button onclick="uploadAndSummarize()">Summarize</button>
 
-<footer>© 2025 | Built by You</footer>
+  <div id="loading">Summarizing, please wait...</div>
 
-<script>
-  let selectedFile = null;
+  <div id="summary"></div>
 
-  // When user picks a file
-  document.getElementById('fileInput').addEventListener('change', function(event) {
-    selectedFile = event.target.files[0];
-  });
+  <footer>© 2025 | Built by You</footer>
 
-  document.getElementById('summarizeBtn').addEventListener('click', async function() {
-    if (!selectedFile) {
-      alert("Please upload a file first.");
-      return;
+  <script>
+    let selectedFile = null;
+
+    document.getElementById('fileInput').addEventListener('change', (e) => {
+      selectedFile = e.target.files[0];
+      if (selectedFile) {
+        document.getElementById('file-name').innerText = `Uploaded: ${selectedFile.name}`;
+      }
+    });
+
+    async function uploadAndSummarize() {
+      if (!selectedFile) {
+        alert('Please upload a file first.');
+        return;
+      }
+
+      document.getElementById('loading').style.display = 'block';
+      document.getElementById('summary').innerText = '';
+
+      const formData = new FormData();
+      formData.append('file', selectedFile);
+
+      try {
+        const response = await fetch('https://book-summarizer-backend.onrender.com/upload', {
+          method: 'POST',
+          body: formData
+        });
+
+        const data = await response.json();
+        document.getElementById('loading').style.display = 'none';
+
+        if (data.summary) {
+          document.getElementById('summary').innerText = data.summary;
+        } else {
+          document.getElementById('summary').innerText = 'No summary received.';
+        }
+      } catch (error) {
+        document.getElementById('loading').style.display = 'none';
+        document.getElementById('summary').innerText = 'An error occurred while summarizing.';
+        console.error('Error:', error);
+      }
     }
-
-    const formData = new FormData();
-    formData.append("file", selectedFile);
-
-    try {
-      const response = await fetch('https://book-summarizer-backend.onrender.com/upload', {
-        method: 'POST',
-        body: formData
-      });
-
-      const result = await response.json();
-      alert(result.summary || result.excerpt || "Summary received!");
-    } catch (error) {
-      console.error('Error:', error);
-      alert('An error occurred while summarizing.');
-    }
-  });
-</script>
-
+  </script>
 </body>
 </html>
