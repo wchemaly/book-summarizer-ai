@@ -204,6 +204,7 @@
   let W = canvas.width  = innerWidth;
   let H = canvas.height = innerHeight;
 
+  // Your word list
   const words = [
     'Knowledge','Power','Wisdom','Truth','Insight','Mastery','Strength','Clarity',
     'Intelligence','Perception','Awareness','Vision','Genius','Revelation',
@@ -215,74 +216,105 @@
     'Curiosity','Alchemy','Logos','Ethos','Praxis','Nexus','Synthesis','Momentum',
     'Transcendence'
   ];
-  const fontSize = 24;
-  const columns  = Math.floor(W / fontSize);
-  const drops    = Array(columns).fill(0).map(_=>Math.random()*H);
 
-  function draw() {
+  const fontSize   = 24;
+  const columns    = Math.floor(W / fontSize);
+  const lineLength = 5; // words per horizontal strip
+
+  // Each "drop" holds a vertical position and a horizontal strip of words
+  const drops = Array.from({length: columns}, () => ({
+    y: Math.random() * H / fontSize,
+    strip: Array.from({length: lineLength}, () =>
+      words[Math.floor(Math.random() * words.length)]
+    )
+  }));
+
+  function drawMatrix() {
+    // trail fade
     ctx.fillStyle = 'rgba(0,0,0,0.05)';
-    ctx.fillRect(0,0,W,H);
-    ctx.fillStyle = '#FFF';
-    ctx.font = fontSize + 'px monospace';
-    for (let i=0; i<columns; i++) {
-      const text = words[Math.floor(Math.random()*words.length)];
-      const x = i * fontSize;
-      const y = drops[i] * fontSize;
-      ctx.fillText(text, x, y);
-      if (y>H && Math.random()>0.975) drops[i]=0;
-      drops[i]++;
-    }
-    requestAnimationFrame(draw);
-  }
-  draw();
+    ctx.fillRect(0, 0, W, H);
 
-  // On resize
-  window.addEventListener('resize', ()=>{
+    ctx.fillStyle = '#FFF';
+    ctx.font = `${fontSize}px monospace`;
+
+    drops.forEach((drop, i) => {
+      const x0 = i * fontSize;
+      const y  = drop.y * fontSize;
+
+      // draw the horizontal strip
+      drop.strip.forEach((w, j) => {
+        ctx.fillText(w, x0 + j * fontSize, y);
+      });
+
+      // advance downward
+      drop.y += 0.2; // slower fall—tweak as you like
+
+      // reset once off-screen
+      if (drop.y * fontSize > H + fontSize) {
+        drop.y = 0;
+        drop.strip = Array.from({length: lineLength}, () =>
+          words[Math.floor(Math.random() * words.length)]
+        );
+      }
+    });
+
+    requestAnimationFrame(drawMatrix);
+  }
+
+  drawMatrix();
+
+  // handle resize
+  window.addEventListener('resize', () => {
     W = canvas.width  = innerWidth;
     H = canvas.height = innerHeight;
   });
 
-  // —— File & UI Logic —— 
-  const dropZone = document.getElementById('drop-zone');
-  const fileInput = document.getElementById('file-input');
-  const fileInfo  = document.getElementById('file-info');
-  const summarizeBtn = document.getElementById('summarize-btn');
-  const loadingOverlay = document.getElementById('loading-overlay');
-  const summaryModal   = document.getElementById('summary-modal');
-  const modalClose     = document.getElementById('modal-close');
-  const summaryContent = document.getElementById('summary-content');
-  const copyBtn        = document.getElementById('copy-btn');
-  const downloadBtn    = document.getElementById('download-btn');
+
+  // —— File & UI Logic (unchanged) —— 
+  const dropZone        = document.getElementById('drop-zone');
+  const fileInput       = document.getElementById('file-input');
+  const fileInfo        = document.getElementById('file-info');
+  const summarizeBtn    = document.getElementById('summarize-btn');
+  const loadingOverlay  = document.getElementById('loading-overlay');
+  const summaryModal    = document.getElementById('summary-modal');
+  const modalClose      = document.getElementById('modal-close');
+  const summaryContent  = document.getElementById('summary-content');
+  const copyBtn         = document.getElementById('copy-btn');
+  const downloadBtn     = document.getElementById('download-btn');
 
   let selectedFile = null, lastSummary = '';
 
-  // Drag & drop handling
-  ['dragenter','dragover'].forEach(e=>
-    dropZone.addEventListener(e, ev=>{ev.preventDefault(); dropZone.classList.add('dragover');})
+  ['dragenter','dragover'].forEach(evt =>
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault(); dropZone.classList.add('dragover');
+    })
   );
-  ['dragleave','drop'].forEach(e=>
-    dropZone.addEventListener(e, ev=>{ev.preventDefault(); dropZone.classList.remove('dragover');})
+  ['dragleave','drop'].forEach(evt =>
+    dropZone.addEventListener(evt, e => {
+      e.preventDefault(); dropZone.classList.remove('dragover');
+    })
   );
-  dropZone.addEventListener('drop', ev=>{
-    if (ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
+  dropZone.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
   });
-  dropZone.addEventListener('click', ()=>fileInput.click());
-  fileInput.addEventListener('change', ()=>fileInput.files[0] && handleFile(fileInput.files[0]));
+  dropZone.addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files[0]) handleFile(fileInput.files[0]);
+  });
 
   function handleFile(file) {
     selectedFile = file;
     fileInfo.textContent = `📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
   }
 
-  // Summarize
-  summarizeBtn.addEventListener('click', async ()=>{
+  summarizeBtn.addEventListener('click', async () => {
     if (!selectedFile) return alert('Please upload a file first.');
     loadingOverlay.classList.add('show');
     summaryContent.textContent = '';
     const fd = new FormData(); fd.append('file', selectedFile);
     try {
       const res  = await fetch('https://book-summarizer-backend.onrender.com/upload', {
-        method:'POST', body:fd
+        method: 'POST', body: fd
       });
       const data = await res.json();
       lastSummary = data.summary || data.excerpt || 'No summary available.';
@@ -296,22 +328,25 @@
     }
   });
 
-  // Modal close
-  modalClose.addEventListener('click', ()=>summaryModal.classList.remove('show'));
-  window.addEventListener('click', ev=>ev.target===summaryModal && summaryModal.classList.remove('show'));
-
-  // Copy & Download
-  copyBtn.addEventListener('click', ()=>{
-    navigator.clipboard.writeText(lastSummary)
-      .then(_=>alert('Copied!'))
-      .catch(_=>alert('Copy failed.'));
+  modalClose.addEventListener('click', () =>
+    summaryModal.classList.remove('show')
+  );
+  window.addEventListener('click', e => {
+    if (e.target === summaryModal) summaryModal.classList.remove('show');
   });
-  downloadBtn.addEventListener('click', ()=>{
+
+  copyBtn.addEventListener('click', () => {
+    navigator.clipboard.writeText(lastSummary)
+      .then(_=> alert('Copied!'))
+      .catch(_=> alert('Copy failed.'));
+  });
+
+  downloadBtn.addEventListener('click', () => {
     const blob = new Blob([lastSummary], {type:'text/plain'});
     const url  = URL.createObjectURL(blob);
     const a    = document.createElement('a');
     a.href     = url;
-    a.download = (selectedFile?.name||'summary')+'.txt';
+    a.download = (selectedFile?.name||'summary') + '.txt';
     a.click();
     URL.revokeObjectURL(url);
   });
