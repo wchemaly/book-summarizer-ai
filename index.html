@@ -6,254 +6,289 @@
   <title>AI Book Summarizer</title>
   <style>
     :root {
-      --bg:    #0f0f0f;
-      --fg:    #ffffff;
-      --muted: #888888;
-      --border:#555555;
-      --error: #ff6b6b;
+      --bg: #000;
+      --fg: #fff;
+      --muted: #ccc;
+      --accent: #fff;
+      --border: #fff;
+      --window-bg: #111;
+      --title-bg: #fff;
+      --title-fg: #000;
     }
-    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: var(--bg);
+    *, *::before, *::after { box-sizing: border-box; margin:0; padding:0; }
+    html, body {
+      width:100%; height:100%;
+      background: url('background.jpg') center/cover no-repeat;
+      font-family: 'Courier New', monospace;
       color: var(--fg);
-      font-family: 'JetBrains Mono', monospace;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      text-align: center;
+      overflow: hidden;
     }
 
-    h1 { font-size: 2.1rem; margin-bottom: .6rem; }
-    p  { color: var(--muted); margin-bottom: 1rem; font-size: 1rem; }
-
-    .panel {
-      position: relative;
-      z-index: 10;
-      width: 360px;               /* ← widened back to 360 */
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 1rem;                  /* ← more breathing room */
+    /* —— Fake Window Container —— */
+    .window {
+      position: absolute;
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      width: 360px;
+      border: 2px solid var(--border);
+      box-shadow: 4px 4px 0 rgba(0,0,0,0.8);
     }
-
-    /* drag/drop box */
-    #drop-zone {
-      width: 100%;
-      padding: 2rem;              /* ← full 2rem padding */
-      border: 2px dashed var(--border);
-      border-radius: 6px;
-      color: var(--muted);
-      transition: background .3s, border-color .3s, color .3s;
+    .titlebar {
+      background: var(--title-bg);
+      color: var(--title-fg);
+      padding: 4px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.85rem;
+      border-bottom: 2px solid var(--border);
+    }
+    .titlebar .buttons { display: flex; }
+    .titlebar .btn {
+      width: 12px; height:12px;
+      margin-left:4px;
+      border:1px solid var(--border);
+      background: var(--accent);
       cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: .75rem;
-      font-size: 1rem;
+    }
+
+    .content {
+      background: var(--window-bg);
+      padding: 16px;
+      text-align: center;
+      display: flex; flex-direction: column; align-items: center;
+      gap: 12px;
+    }
+
+    h1 { font-size: 1.2rem; }
+    p  { font-size: 0.85rem; color: var(--muted); }
+
+    /* —— Drop Zone —— */
+    #drop-zone {
+      position: relative;
+      width: 100%;
+      padding: 24px;
+      border: 2px dashed var(--muted);
+      border-radius: 4px;
+      display: flex; flex-direction: column; align-items: center; gap: 8px;
+      background: transparent;
+      transition: background .2s, border-color .2s;
     }
     #drop-zone.dragover {
-      background: #1a1a1a;
-      border-color: var(--fg);
-      color: var(--fg);
+      background: rgba(255,255,255,0.1);
+      border-color: var(--accent);
     }
     #drop-zone svg {
-      width: 32px; height: 32px;
-      fill: var(--muted);
-      transition: fill .3s;
+      width:24px; height:24px; fill: var(--muted);
+      transition: fill .2s;
     }
-    #drop-zone.dragover svg { fill: var(--fg); }
-    #drop-zone input { display: none; }
-
-    /* file info + clear */
-    #file-info {
-      font-size: .9rem;
+    #drop-zone.dragover svg {
+      fill: var(--accent);
+    }
+    #drop-zone span {
       color: var(--muted);
-      display: flex;
-      align-items: center;
-      gap: .5rem;
+      font-size: 0.85rem;
+    }
+
+    /* make the input cover entire zone */
+    #file-input {
+      position: absolute;
+      top:0; left:0; width:100%; height:100%;
+      opacity:0; cursor: pointer;
+    }
+
+    /* —— File Info + Clear —— */
+    #file-info {
+      font-size: 0.75rem;
+      color: var(--muted);
+      display: flex; align-items:center; gap:4px;
       word-break: break-all;
     }
     #clear-btn {
       background: none;
       border: none;
-      color: var(--error);
-      font-size: 1.2rem;
+      color: var(--muted);
+      font-weight: bold;
       cursor: pointer;
       visibility: hidden;
     }
+    #file-info.visible + #clear-btn {
+      visibility: visible;
+    }
 
-    /* summary‐length toggles */
-    #length-control {
-      display: flex;
-      gap: .6rem;
+    /* —— Length Toggles + Summarize —— */
+    .controls {
+      display: flex; gap: 4px; margin-top: 4px;
     }
     .length-btn {
-      padding: .4rem .9rem;
-      border: 1px solid var(--fg);
-      background: none;
-      color: var(--fg);
-      border-radius: 4px;
+      flex: 1;
+      padding: 4px;
+      background: var(--window-bg);
+      border: 1px solid var(--border);
+      font-size: 0.75rem;
       cursor: pointer;
-      transition: background .3s, color .3s;
-      font-size: .95rem;
+      transition: background .2s, color .2s;
     }
-    .length-btn:hover { background: var(--fg); color: var(--bg); }
     .length-btn.active {
-      background: var(--fg);
+      background: var(--accent);
       color: var(--bg);
     }
 
-    /* summarize button */
     #summarize-btn {
-      margin-top: .5rem;
-      padding: .6rem 1.2rem;
-      background: var(--fg);
+      margin-top: 8px;
+      width: 100%;
+      padding: 6px 0;
+      background: var(--accent);
       color: var(--bg);
       border: none;
-      border-radius: 6px;
       cursor: pointer;
-      transition: opacity .3s;
-      font-size: 1rem;
+      transition: opacity .2s;
     }
     #summarize-btn:disabled {
-      opacity: .5;
+      opacity: 0.5;
       cursor: not-allowed;
     }
 
-    /* full-screen loader */
+    /* —— Loader Overlay —— */
     #loading-overlay {
-      position: fixed; top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex; align-items: center; justify-content: center;
-      visibility: hidden; opacity: 0;
-      transition: opacity .3s;
-      z-index: 20;
+      position: fixed; top:0; left:0;
+      width:100%; height:100%;
+      background: rgba(0,0,0,0.7);
+      display:flex; align-items:center; justify-content:center;
+      visibility:hidden; opacity:0;
+      transition: opacity .2s;
+      z-index: 5;
     }
     #loading-overlay.show {
-      visibility: visible; opacity: 1;
+      visibility: visible; opacity:1;
     }
     .spinner {
-      border: 8px solid var(--border);
-      border-top: 8px solid var(--fg);
-      border-radius: 50%;
-      width: 60px; height: 60px;
+      border:6px solid var(--muted);
+      border-top:6px solid var(--fg);
+      border-radius:50%;
+      width:48px; height:48px;
       animation: spin .8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg); } }
+    @keyframes spin { to{transform:rotate(360deg);} }
 
-    /* summary modal */
+    /* —— Summary Modal —— */
     #summary-modal {
-      position: fixed; top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      background: var(--bg); color: var(--fg);
-      width: 90%; max-width: 500px; max-height: 70vh;
-      border-radius: 8px;
-      display: flex; flex-direction: column;
-      visibility: hidden; opacity: 0;
-      transition: opacity .3s;
-      z-index: 30;
+      position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width:80%; max-width:400px;
+      background: var(--window-bg);
+      border:2px solid var(--border);
+      border-radius:4px;
+      visibility:hidden; opacity:0;
+      transition: opacity .2s;
+      z-index:10;
+      display:flex;flex-direction:column;
     }
     #summary-modal.show {
-      visibility: visible; opacity: 1;
+      visibility:visible; opacity:1;
     }
     .modal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1rem; border-bottom: 1px solid var(--border);
+      background: var(--title-bg);
+      color: var(--title-fg);
+      padding:4px 8px;
+      display:flex;justify-content:space-between;
+      align-items:center;
+      border-bottom:2px solid var(--border);
     }
-    .modal-header h2 { font-size: 1.3rem; }
-    .close-btn {
-      background: none; border: none;
-      color: var(--fg); font-size: 1.5rem;
-      cursor: pointer;
-    }
-    #summary-content {
-      padding: 1rem;
-      overflow-y: auto;
-      white-space: pre-wrap; line-height: 1.5;
-      flex: 1; font-size: .95rem;
+    .modal-header h2 { font-size:0.85rem; }
+    .modal-body {
+      padding:8px;
+      overflow-y:auto;
+      max-height:60vh;
+      color: var(--fg);
+      font-size:0.85rem;
+      white-space:pre-wrap;
+      line-height:1.4;
     }
     .modal-footer {
-      padding: .75rem 1rem;
-      border-top: 1px solid var(--border);
-      display: flex; gap: .5rem; justify-content: flex-end;
+      display:flex; justify-content:flex-end;
+      gap:4px;
+      padding:4px 8px;
+      border-top:2px solid var(--border);
     }
     .modal-footer button {
-      padding: .5rem 1rem;
-      background: var(--fg);
+      padding:4px 8px;
+      background: var(--accent);
       color: var(--bg);
-      border: none; border-radius: 4px;
-      cursor: pointer; font-size: .95rem;
-    }
-
-    footer {
-      position: absolute; bottom: 15px;
-      font-size: .75rem; color: var(--muted);
-      z-index: 10;
+      border:none; cursor:pointer;
+      font-size:0.8rem;
     }
   </style>
 </head>
 <body>
 
-  <div class="panel">
-    <h1>AI Book Summarizer</h1>
-    <p>Summarize any book in minutes.</p>
-
-    <label id="drop-zone">
-      <svg viewBox="0 0 24 24">
-        <path d="M19 9h-4V3H9v6H5l7 7 7-7z"/>
-        <path d="M5 18h14v2H5z"/>
-      </svg>
-      <span>Click or Drop a PDF/EPUB here</span>
-      <input type="file" id="file-input" accept=".pdf,.epub"/>
-    </label>
-
-    <div id="file-info" role="status"></div>
-    <button id="clear-btn" aria-label="Clear file">×</button>
-
-    <div id="length-control" role="radiogroup" aria-label="Summary length">
-      <button class="length-btn" data-length="short">Short</button>
-      <button class="length-btn active" data-length="medium">Medium</button>
-      <button class="length-btn" data-length="long">Long</button>
+  <!-- fake OS window -->
+  <div class="window">
+    <div class="titlebar">
+      <span>PROJECT.EXE</span>
+      <div class="buttons">
+        <div class="btn"></div>
+        <div class="btn"></div>
+        <div class="btn"></div>
+      </div>
     </div>
+    <div class="content">
+      <h1>AI Book Summarizer</h1>
+      <p>Summarize any book in minutes.</p>
 
-    <button id="summarize-btn" disabled>Summarize</button>
+      <label id="drop-zone">
+        <svg viewBox="0 0 24 24">
+          <path d="M19 9h-4V3H9v6H5l7 7 7-7z"/>
+          <path d="M5 18h14v2H5z"/>
+        </svg>
+        <span>Click or drop a PDF/EPUB here</span>
+        <input type="file" id="file-input" accept=".pdf,.epub"/>
+      </label>
+
+      <div id="file-info"></div>
+      <button id="clear-btn" title="Clear file">×</button>
+
+      <div class="controls">
+        <button class="length-btn" data-length="short">Short</button>
+        <button class="length-btn active" data-length="medium">Medium</button>
+        <button class="length-btn" data-length="long">Long</button>
+      </div>
+
+      <button id="summarize-btn" disabled>Summarize</button>
+    </div>
   </div>
 
-  <div id="loading-overlay"><div class="spinner"></div></div>
+  <div id="loading-overlay">
+    <div class="spinner"></div>
+  </div>
 
-  <div id="summary-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+  <div id="summary-modal">
     <div class="modal-header">
-      <h2 id="modal-title">Summary</h2>
-      <button class="close-btn" id="modal-close" aria-label="Close summary">×</button>
+      <h2>Summary</h2>
+      <button class="close-btn" id="modal-close">×</button>
     </div>
-    <div id="summary-content"></div>
+    <div class="modal-body" id="summary-content"></div>
     <div class="modal-footer">
       <button id="copy-btn">Copy</button>
       <button id="download-btn">Download</button>
     </div>
   </div>
 
-  <footer>© 2025 | Built by You</footer>
-
   <script>
-    const dropZone       = document.getElementById('drop-zone');
-    const fileInput      = document.getElementById('file-input');
-    const fileInfo       = document.getElementById('file-info');
-    const clearBtn       = document.getElementById('clear-btn');
-    const lengthBtns     = document.querySelectorAll('.length-btn');
-    const summarizeBtn   = document.getElementById('summarize-btn');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const summaryModal   = document.getElementById('summary-modal');
-    const modalClose     = document.getElementById('modal-close');
-    const summaryContent = document.getElementById('summary-content');
-    const copyBtn        = document.getElementById('copy-btn');
-    const downloadBtn    = document.getElementById('download-btn');
+    const dropZone     = document.getElementById('drop-zone');
+    const fileInput    = document.getElementById('file-input');
+    const fileInfo     = document.getElementById('file-info');
+    const clearBtn     = document.getElementById('clear-btn');
+    const lengthBtns   = document.querySelectorAll('.length-btn');
+    const summarizeBtn = document.getElementById('summarize-btn');
+    const loadingOv    = document.getElementById('loading-overlay');
+    const summaryModal = document.getElementById('summary-modal');
+    const modalClose   = document.getElementById('modal-close');
+    const summaryBody  = document.getElementById('summary-content');
+    const copyBtn      = document.getElementById('copy-btn');
+    const dlBtn        = document.getElementById('download-btn');
 
-    let selectedFile  = null,
-        lastSummary   = '',
-        summaryLength = 'medium';
+    let selectedFile=null, lastSummary='', summaryLength='medium';
 
     function handleFile(file) {
       selectedFile = file;
@@ -262,6 +297,7 @@
       clearBtn.style.visibility = 'visible';
     }
 
+    // drag/drop styling
     ['dragenter','dragover'].forEach(e=>
       dropZone.addEventListener(e, ev=>{
         ev.preventDefault();
@@ -274,35 +310,41 @@
         dropZone.classList.remove('dragover');
       })
     );
-    dropZone.addEventListener('drop', ev=>{
-      if (ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
-    });
-    dropZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files.length) handleFile(fileInput.files[0]);
+
+    // on drop
+    dropZone.addEventListener('drop', ev=> {
+      if(ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
     });
 
+    // clicking hit the input directly now
+    fileInput.addEventListener('change', ()=> {
+      if(fileInput.files.length) handleFile(fileInput.files[0]);
+    });
+
+    // clear
     clearBtn.addEventListener('click', ()=>{
-      selectedFile = null;
-      fileInput.value = '';
-      fileInfo.textContent = '';
-      summarizeBtn.disabled = true;
-      clearBtn.style.visibility = 'hidden';
+      selectedFile=null;
+      fileInput.value='';
+      fileInfo.textContent='';
+      clearBtn.style.visibility='hidden';
+      summarizeBtn.disabled=true;
     });
 
-    lengthBtns.forEach(btn=>{
-      btn.addEventListener('click', ()=>{
-        lengthBtns.forEach(b=>b.classList.remove('active'));
-        btn.classList.add('active');
-        summaryLength = btn.dataset.length;
+    // length toggles
+    lengthBtns.forEach(b=>{
+      b.addEventListener('click', ()=> {
+        lengthBtns.forEach(x=>x.classList.remove('active'));
+        b.classList.add('active');
+        summaryLength = b.dataset.length;
       });
     });
 
+    // summarize
     summarizeBtn.addEventListener('click', async ()=>{
-      if (!selectedFile) return;
+      if(!selectedFile) return;
       summarizeBtn.disabled = true;
-      loadingOverlay.classList.add('show');
-      summaryContent.textContent = '';
+      loadingOv.classList.add('show');
+      summaryBody.textContent = '';
       summaryModal.classList.remove('show');
 
       const fd = new FormData();
@@ -310,39 +352,43 @@
       fd.append('length', summaryLength);
 
       try {
-        const res  = await fetch('https://book-summarizer-backend.onrender.com/upload', {
-          method:'POST', body: fd
+        const res = await fetch('https://book-summarizer-backend.onrender.com/upload',{
+          method:'POST', body:fd
         });
-        const data = await res.json();
-        lastSummary = data.summary || data.excerpt || 'No summary available.';
-        summaryContent.textContent = lastSummary;
+        const js  = await res.json();
+        lastSummary = js.summary||js.excerpt||'No summary available.';
+        summaryBody.textContent = lastSummary;
         summaryModal.classList.add('show');
-      } catch (err) {
-        console.error(err);
+      } catch(e) {
+        console.error(e);
         alert('Error summarizing file.');
       } finally {
-        loadingOverlay.classList.remove('show');
+        loadingOv.classList.remove('show');
         summarizeBtn.disabled = false;
       }
     });
 
-    modalClose.addEventListener('click', ()=> summaryModal.classList.remove('show'));
-    window.addEventListener('keydown', ev=> ev.key === 'Escape' && summaryModal.classList.remove('show'));
-    window.addEventListener('click', ev=> {
-      if (ev.target === summaryModal) summaryModal.classList.remove('show');
+    // modal controls
+    modalClose.onclick = ()=> summaryModal.classList.remove('show');
+    window.addEventListener('click', e=> {
+      if(e.target===summaryModal) summaryModal.classList.remove('show');
+    });
+    window.addEventListener('keyup', e=>{
+      if(e.key==='Escape') summaryModal.classList.remove('show');
     });
 
-    copyBtn.addEventListener('click', ()=>{
+    // copy & download
+    copyBtn.addEventListener('click', ()=> {
       navigator.clipboard.writeText(lastSummary)
-        .then(()=> alert('Copied!'))
-        .catch(()=> alert('Copy failed.'));
+        .then(_=>alert('Copied!'))
+        .catch(_=>alert('Copy failed.'));
     });
-    downloadBtn.addEventListener('click', ()=>{
-      const blob = new Blob([lastSummary], { type:'text/plain' });
+    dlBtn.addEventListener('click', ()=> {
+      const blob = new Blob([lastSummary],{type:'text/plain'});
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href     = url;
-      a.download = (selectedFile?.name||'summary') + '.txt';
+      a.download = (selectedFile?.name||'summary')+'.txt';
       a.click();
       URL.revokeObjectURL(url);
     });
