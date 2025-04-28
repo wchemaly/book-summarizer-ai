@@ -76,15 +76,18 @@
       padding: 20px;
       border-radius: 8px;
       width: 90%;
-      max-width: 500px;
+      max-width: 600px;
+      height: 400px; /* BIGGER box */
       color: #eee;
       display: none;
       z-index: 1000;
       text-align: left;
+      overflow: hidden;
     }
 
     .modal.show {
-      display: block;
+      display: flex;
+      flex-direction: column;
     }
 
     .modal-header {
@@ -102,40 +105,31 @@
       cursor: pointer;
     }
 
-    #loader {
-      display: none;
-      margin-top: 20px;
-      border: 6px solid #444;
-      border-top: 6px solid #eee;
-      border-radius: 50%;
-      width: 40px;
-      height: 40px;
-      animation: spin 1s linear infinite;
-    }
-
-    @keyframes spin {
-      0% { transform: rotate(0deg); }
-      100% { transform: rotate(360deg); }
+    #summary-text {
+      overflow-y: auto;
+      flex-grow: 1;
+      padding-right: 10px;
+      font-size: 14px;
+      line-height: 1.5;
     }
   </style>
 </head>
+
 <body>
   <h1>AI Book Summarizer</h1>
   <p>Summarize any book in minutes.</p>
 
-  <label class="upload" id="file-label">
-    <input type="file" id="file-input" style="display: none" />
+  <label class="upload" id="fileLabel">
+    <input type="file" id="fileInput" style="display: none" />
     Click to upload a book (PDF/EPUB)
   </label>
 
-  <button onclick="summarize()">Summarize</button>
+  <button id="summarizeBtn">Summarize</button>
 
-  <div id="loader"></div>
-
-  <div class="modal" id="summary-modal">
+  <div class="modal" id="summaryModal">
     <div class="modal-header">
-      <h3>Summary</h3>
-      <button class="close-btn" onclick="closeModal()">×</button>
+      <h2>Summary</h2>
+      <button class="close-btn" id="closeModal">&times;</button>
     </div>
     <div id="summary-text"></div>
   </div>
@@ -143,47 +137,48 @@
   <footer>© 2025 | Built by You</footer>
 
   <script>
-    let selectedFile = null;
+    const fileInput = document.getElementById('fileInput');
+    const fileLabel = document.getElementById('fileLabel');
+    const summarizeBtn = document.getElementById('summarizeBtn');
+    const summaryModal = document.getElementById('summaryModal');
+    const closeModal = document.getElementById('closeModal');
+    const summaryText = document.getElementById('summary-text');
 
-    document.getElementById('file-input').addEventListener('change', function(event) {
-      selectedFile = event.target.files[0];
-      if (selectedFile) {
-        document.getElementById('file-label').innerText = selectedFile.name;
+    fileLabel.addEventListener('click', () => fileInput.click());
+
+    fileInput.addEventListener('change', () => {
+      if (fileInput.files.length > 0) {
+        fileLabel.innerText = fileInput.files[0].name;
       }
     });
 
-    function summarize() {
-      if (!selectedFile) {
+    summarizeBtn.addEventListener('click', async () => {
+      if (fileInput.files.length === 0) {
         alert('Please upload a file first.');
         return;
       }
 
-      const loader = document.getElementById('loader');
-      loader.style.display = 'block'; // show loader
-
       const formData = new FormData();
-      formData.append('file', selectedFile);
+      formData.append('file', fileInput.files[0]);
 
-      fetch('https://book-summarizer-backend.onrender.com/upload', {
-        method: 'POST',
-        body: formData
-      })
-      .then(response => response.json())
-      .then(data => {
-        loader.style.display = 'none'; // hide loader
-        document.getElementById('summary-text').innerText = data.summary || data.excerpt || 'No summary available.';
-        document.getElementById('summary-modal').classList.add('show');
-      })
-      .catch(error => {
-        loader.style.display = 'none'; // hide loader
-        alert('Error summarizing file.');
+      try {
+        const response = await fetch('https://book-summarizer-backend.onrender.com/upload', {
+          method: 'POST',
+          body: formData,
+        });
+
+        const data = await response.json();
+        summaryText.innerText = data.summary || data.excerpt || 'No summary found.';
+        summaryModal.classList.add('show');
+      } catch (error) {
         console.error('Error:', error);
-      });
-    }
+        alert('Something went wrong while summarizing the book.');
+      }
+    });
 
-    function closeModal() {
-      document.getElementById('summary-modal').classList.remove('show');
-    }
+    closeModal.addEventListener('click', () => {
+      summaryModal.classList.remove('show');
+    });
   </script>
 </body>
 </html>
