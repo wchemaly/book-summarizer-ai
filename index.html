@@ -5,16 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Book Summarizer</title>
   <style>
-    /* —— Variables & Reset —— */
     :root {
       --bg:   #0f0f0f;
       --fg:   #ffffff;
       --muted:#888888;
-      --panel:#1a1a1a;
       --border:#444444;
       --error: #ff6b6b;
     }
-    * { box-sizing: border-box; margin: 0; padding: 0; }
+    * { box-sizing: border-box; margin:0; padding:0; }
     body {
       background: var(--bg);
       color: var(--fg);
@@ -23,34 +21,46 @@
       align-items: center; justify-content: center;
       height: 100vh; text-align: center;
     }
-    button, select { font-family: inherit; }
 
-    /* —— Headings —— */
     h1 { font-size: 2rem; margin-bottom: .5rem; }
     p  { color: var(--muted); margin-bottom: 1rem; }
+
+    /* —— CONTROL WRAPPER —— */
+    .controls {
+      width: 320px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .5rem;
+    }
 
     /* —— Drag-Drop Zone —— */
     #drop-zone {
       border: 2px dashed var(--border);
       border-radius: 6px;
-      width: 320px; padding: 2rem;
+      width: 100%; padding: 2rem;
       display: flex; flex-direction: column; align-items: center; gap: .5rem;
       color: var(--muted);
       transition: background .3s, border-color .3s, color .3s;
-      cursor: pointer; margin-bottom: 1rem;
+      cursor: pointer;
     }
     #drop-zone.dragover {
-      background: #222222; border-color: var(--fg); color: var(--fg);
+      background: #222; border-color: var(--fg); color: var(--fg);
     }
-    #drop-zone svg { width:32px; height:32px; fill: var(--muted); transition: fill .3s; }
+    #drop-zone svg {
+      fill: var(--muted); width: 32px; height: 32px;
+      transition: fill .3s;
+    }
     #drop-zone.dragover svg { fill: var(--fg); }
     #drop-zone input { display: none; }
 
-    /* —— File Info + Clear —— */
+    /* —— File info & clear —— */
     #file-info {
       font-size: .9rem; color: var(--muted);
-      display: flex; align-items: center; gap: .5rem; margin-bottom: .5rem;
+      display: flex; align-items: center; gap: .5rem;
       word-break: break-all;
+      width: 100%;
+      justify-content: center;
     }
     #clear-btn {
       background: none; border: none;
@@ -58,13 +68,13 @@
       cursor: pointer; visibility: hidden;
     }
 
-    /* —— Length Selector (segmented) —— */
+    /* —— Length selector —— */
     #length-control {
-      display: flex; gap: .5rem; margin-bottom: 1rem;
+      display: flex; gap: .5rem;
     }
     .length-btn {
       padding: .5rem 1rem;
-      background: none; border: 1px solid var(--fg);
+      background: none; border:1px solid var(--fg);
       color: var(--fg); border-radius: 4px;
       cursor: pointer; transition: background .3s, color .3s;
       font-size: .9rem;
@@ -73,7 +83,7 @@
       background: var(--fg); color: var(--bg);
     }
 
-    /* —— Summarize Button —— */
+    /* —— Summarize button —— */
     #summarize-btn {
       padding: .75rem 1.5rem;
       background: var(--fg); color: var(--bg);
@@ -84,49 +94,46 @@
       opacity: .5; cursor: not-allowed;
     }
 
-    /* —— Progress Bar —— */
+    /* —— Progress bar container —— */
     #progress-container {
-      width: 80%; max-width: 360px;
-      height: 6px; background: var(--border);
-      border-radius: 3px; overflow: hidden;
-      margin: 1rem auto; display: none;
+      width: 100%; height: 6px;
+      background: var(--border); border-radius:3px;
+      overflow: hidden; margin-top: .5rem;
+      display: none;
     }
     #progress-bar {
       width: 0%; height: 100%;
       background: var(--fg); transition: width .3s;
     }
 
-    /* —— Loading Overlay —— */
+    /* —— Loading overlay —— */
     #loading-overlay {
       position: fixed; top:0; left:0;
       width:100%; height:100%;
       background:rgba(0,0,0,0.8);
       display:flex; align-items:center; justify-content:center;
       visibility:hidden; opacity:0;
-      transition:opacity .3s;
-      z-index:2000;
+      transition:opacity .3s; z-index:2000;
     }
     #loading-overlay.show {
       visibility:visible; opacity:1;
     }
     .spinner {
-      border: 8px solid var(--border);
-      border-top: 8px solid var(--fg);
-      border-radius:50%;
-      width:60px; height:60px;
+      border:8px solid var(--border);
+      border-top:8px solid var(--fg);
+      border-radius:50%; width:60px; height:60px;
       animation:spin .8s linear infinite;
     }
-    @keyframes spin{to{transform:rotate(360deg);}}
+    @keyframes spin { to{transform:rotate(360deg);} }
 
     /* —— Modal —— */
     #summary-modal {
       position:fixed; top:50%; left:50%;
       transform:translate(-50%,-50%);
-      background:var(--panel); color:var(--fg);
+      background:var(--bg); color:var(--fg);
       width:90%; max-width:500px; max-height:70vh;
       border-radius:8px; display:flex; flex-direction:column;
-      visibility:hidden; opacity:0;
-      transition:opacity .3s;
+      visibility:hidden; opacity:0; transition:opacity .3s;
       z-index:3000;
     }
     #summary-modal.show {
@@ -139,23 +146,19 @@
     .modal-header h2 { margin:0; font-size:1.25rem; }
     .close-btn {
       background:none; border:none;
-      color:var(--fg); font-size:1.5rem;
-      cursor:pointer;
+      color:var(--fg); font-size:1.5rem; cursor:pointer;
     }
     #summary-content {
       padding:1rem; overflow-y:auto;
-      white-space:pre-wrap; line-height:1.5;
-      font-size:.95rem; flex:1;
+      white-space:pre-wrap; line-height:1.5; flex:1; font-size:.95rem;
     }
     .modal-footer {
-      padding:.75rem 1rem;
-      border-top:1px solid var(--border);
+      padding:.75rem 1rem; border-top:1px solid var(--border);
       display:flex; gap:.5rem; justify-content:flex-end;
     }
     .modal-footer button {
-      padding:.5rem 1rem;
-      background:var(--fg); color:var(--bg);
-      border:none; border-radius:4px;
+      padding:.5rem 1rem; background:var(--fg);
+      color:var(--bg); border:none; border-radius:4px;
       cursor:pointer; font-size:.9rem;
     }
 
@@ -171,24 +174,26 @@
   <h1>AI Book Summarizer</h1>
   <p>Summarize any book in minutes.</p>
 
-  <label id="drop-zone" tabindex="0" aria-describedby="file-info">
-    <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7z"/><path d="M5 18h14v2H5z"/></svg>
-    <span>Click or Drop a PDF/EPUB here</span>
-    <input type="file" id="file-input" accept=".pdf,.epub"/>
-  </label>
+  <div class="controls">
+    <label id="drop-zone" tabindex="0" aria-describedby="file-info">
+      <svg viewBox="0 0 24 24"><path d="M19 9h-4V3H9v6H5l7 7 7-7z"/><path d="M5 18h14v2H5z"/></svg>
+      <span>Click or Drop a PDF/EPUB here</span>
+      <input type="file" id="file-input" accept=".pdf,.epub"/>
+    </label>
 
-  <div id="file-info" role="status"></div>
-  <button id="clear-btn" aria-label="Clear file">×</button>
+    <div id="file-info" role="status"></div>
+    <button id="clear-btn" aria-label="Clear file">×</button>
 
-  <div id="length-control" role="radiogroup" aria-label="Summary length">
-    <button type="button" class="length-btn" data-length="short">Short</button>
-    <button type="button" class="length-btn active" data-length="medium">Medium</button>
-    <button type="button" class="length-btn" data-length="long">Long</button>
+    <div id="length-control" role="radiogroup" aria-label="Summary length">
+      <button type="button" class="length-btn" data-length="short">Short</button>
+      <button type="button" class="length-btn active" data-length="medium">Medium</button>
+      <button type="button" class="length-btn" data-length="long">Long</button>
+    </div>
+
+    <button id="summarize-btn" disabled>Summarize</button>
+    <div id="progress-container"><div id="progress-bar"></div></div>
   </div>
 
-  <button id="summarize-btn" disabled>Summarize</button>
-
-  <div id="progress-container"><div id="progress-bar"></div></div>
   <div id="loading-overlay"><div class="spinner"></div></div>
 
   <div id="summary-modal" role="dialog" aria-modal="true" aria-labelledby="modal-title">
@@ -206,7 +211,7 @@
   <footer>© 2025 | Built by You</footer>
 
   <script>
-    // Elements
+    // Grab elements
     const dropZone       = document.getElementById('drop-zone');
     const fileInput      = document.getElementById('file-input');
     const fileInfo       = document.getElementById('file-info');
@@ -226,44 +231,39 @@
         lastSummary  = '',
         summaryLength= 'medium';
 
-    // Drag & Drop + Click
-    ['dragenter','dragover'].forEach(e =>
+    // Drag & drop
+    ['dragenter','dragover'].forEach(e=>
       dropZone.addEventListener(e, ev=>{
         ev.preventDefault(); dropZone.classList.add('dragover');
-      })
-    );
-    ['dragleave','drop'].forEach(e =>
+      }))
+    ['dragleave','drop'].forEach(e=>
       dropZone.addEventListener(e, ev=>{
         ev.preventDefault(); dropZone.classList.remove('dragover');
-      })
-    );
+      }))
     dropZone.addEventListener('drop', ev=>{
-      if (ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
+      if(ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
     });
-    dropZone.addEventListener('click', ()=>fileInput.click());
+    dropZone.addEventListener('click', ()=> fileInput.click());
     dropZone.addEventListener('keydown', ev=>{
-      if (ev.key==='Enter'||ev.key===' ') fileInput.click();
+      if(ev.key==='Enter'||ev.key===' ') fileInput.click();
     });
-
-    // File input
     fileInput.addEventListener('change', ()=> {
-      if (fileInput.files.length) handleFile(fileInput.files[0]);
+      if(fileInput.files.length) handleFile(fileInput.files[0]);
     });
 
     // Clear file
     clearBtn.addEventListener('click', ()=>{
-      selectedFile = null;
-      fileInput.value = '';
-      fileInfo.textContent = '';
-      summarizeBtn.disabled = true;
-      clearBtn.style.visibility = 'hidden';
+      selectedFile=null; fileInput.value='';
+      fileInfo.textContent='';
+      summarizeBtn.disabled=true;
+      clearBtn.style.visibility='hidden';
     });
 
-    function handleFile(file) {
-      selectedFile = file;
-      fileInfo.textContent = `📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
-      summarizeBtn.disabled = false;
-      clearBtn.style.visibility = 'visible';
+    function handleFile(file){
+      selectedFile=file;
+      fileInfo.textContent=`📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
+      summarizeBtn.disabled=false;
+      clearBtn.style.visibility='visible';
     }
 
     // Length selector
@@ -271,67 +271,67 @@
       btn.addEventListener('click', ()=>{
         lengthBtns.forEach(b=>b.classList.remove('active'));
         btn.classList.add('active');
-        summaryLength = btn.dataset.length;
+        summaryLength=btn.dataset.length;
       });
     });
 
     // Summarize
     summarizeBtn.addEventListener('click', async ()=>{
-      if (!selectedFile) return;
-      summarizeBtn.disabled = true;
-      progressCont.style.display = 'block';
-      progressBar.style.width = '0%';
-      summaryContent.textContent = '';
+      if(!selectedFile) return;
+      summarizeBtn.disabled=true;
+      progressCont.style.display='block';
+      progressBar.style.width='0%';
+      summaryContent.textContent='';
       summaryModal.classList.remove('show');
 
-      const fd = new FormData();
+      const fd = new FormData(); 
       fd.append('file', selectedFile);
       fd.append('length', summaryLength);
 
       // fake progress
-      let pct = 0;
+      let pct=0;
       const timer = setInterval(()=>{
         pct = Math.min(pct + Math.random()*20, 85);
-        progressBar.style.width = pct + '%';
-      }, 300);
+        progressBar.style.width=pct+'%';
+      },300);
 
       try {
-        const res = await fetch('https://book-summarizer-backend.onrender.com/upload', {
+        const res = await fetch('https://book-summarizer-backend.onrender.com/upload',{
           method:'POST', body: fd
         });
         const data = await res.json();
-        lastSummary = data.summary || data.excerpt || 'No summary available.';
-        summaryContent.textContent = lastSummary;
+        lastSummary = data.summary||data.excerpt||'No summary available.';
+        summaryContent.textContent=lastSummary;
         clearInterval(timer);
-        progressBar.style.width = '100%';
-        setTimeout(()=> progressCont.style.display='none', 200);
+        progressBar.style.width='100%';
+        setTimeout(()=> progressCont.style.display='none',200);
         summaryModal.classList.add('show');
       } catch(err) {
         clearInterval(timer);
-        progressCont.style.display = 'none';
+        progressCont.style.display='none';
         console.error(err);
         alert('Error summarizing file.');
       } finally {
-        summarizeBtn.disabled = false;
+        summarizeBtn.disabled=false;
       }
     });
 
     // Modal close
     modalClose.addEventListener('click', ()=> summaryModal.classList.remove('show'));
-    window.addEventListener('keydown', ev=> { if(ev.key==='Escape') summaryModal.classList.remove('show'); });
-    window.addEventListener('click', ev=> { if(ev.target===summaryModal) summaryModal.classList.remove('show'); });
+    window.addEventListener('keydown', ev=> ev.key==='Escape' && summaryModal.classList.remove('show'));
+    window.addEventListener('click', ev=> ev.target===summaryModal && summaryModal.classList.remove('show'));
 
-    // Copy & Download
+    // Copy & download
     copyBtn.addEventListener('click', ()=>{
       navigator.clipboard.writeText(lastSummary)
         .then(()=> alert('Copied!'))
         .catch(()=> alert('Copy failed.'));
     });
     downloadBtn.addEventListener('click', ()=>{
-      const blob = new Blob([lastSummary], {type:'text/plain'});
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
+      const blob = new Blob([lastSummary],{type:'text/plain'});
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
       a.download = (selectedFile?.name||'summary')+'.txt';
       a.click();
       URL.revokeObjectURL(url);
