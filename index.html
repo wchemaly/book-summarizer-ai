@@ -25,13 +25,13 @@
     .panel {
       width:360px;
       display:flex; flex-direction:column; align-items:center;
-      gap:1.2rem;
+      gap:1.4rem;
     }
     h1 {
       font-size:2.6rem; font-weight:700; letter-spacing:.5px;
     }
     p {
-      font-size:1rem; color:var(--muted); margin-top:-.4rem;
+      font-size:1rem; color:var(--muted); margin-top:-.2rem; margin-bottom:1rem;
     }
     #drop-zone {
       position:relative; width:100%; padding:2rem;
@@ -153,7 +153,7 @@
       position:fixed; bottom:0; left:50%; transform:translateX(-50%);
       width:100%; max-width:360px;
       padding:.6rem 0; border-top:1px solid var(--border);
-      background:var(--bg-end); color:rgba(255,255,255,0.5);
+      background:var(--bg-end); color:rgba(255,255,255,0.6);
       font-size:.75rem; text-align:center; z-index:10;
     }
   </style>
@@ -167,7 +167,7 @@
       <span>Click or drop PDF/EPUB</span>
       <input type="file" id="file-input" accept=".pdf,.epub"/>
     </label>
-    <div class="microcopy">Max 20 MB • PDF, EPUB accepted • Files deleted after use.</div>
+    <div class="microcopy">Max 20 MB • PDF / EPUB</div>
     <div id="file-info" role="status"></div>
     <button id="clear-btn">×</button>
     <div class="controls" id="length-control" role="radiogroup">
@@ -214,9 +214,7 @@
     ['dragleave','drop'].forEach(e=>dz.addEventListener(e,a=>{a.preventDefault();dz.classList.remove('dragover')}));
     dz.addEventListener('drop',e=>e.dataTransfer.files.length&&hF(e.dataTransfer.files[0]));
     fi.addEventListener('change',()=>fi.files.length&&hF(fi.files[0]));
-    cb.addEventListener('click',()=>{
-      file=null; fi.value=''; fo.textContent=''; sb.disabled=true; cb.style.visibility='hidden';
-    });
+    cb.addEventListener('click',()=>{file=null;fi.value='';fo.textContent='';sb.disabled=true;cb.style.visibility='hidden'});
     lb.forEach(b=>b.addEventListener('click',()=>{
       lb.forEach(x=>x.classList.remove('active')); b.classList.add('active'); len=b.dataset.length;
     }));
@@ -227,15 +225,15 @@
       try {
         const r=await fetch('https://book-summarizer-backend.onrender.com/upload',{method:'POST',body:fd});
         const d=await r.json(); sum=d.summary||d.excerpt||'No summary'; sc.textContent=sum; md.classList.add('show');
-      } catch{} lo.classList.remove('show'); sb.disabled=false;
+      } catch{} finally{ lo.classList.remove('show'); sb.disabled=false }
     });
     mc.onclick=()=>md.classList.remove('show');
     window.addEventListener('click',e=>e.target===md&&md.classList.remove('show'));
     window.addEventListener('keyup',e=>e.key==='Escape'&&md.classList.remove('show'));
     cp.addEventListener('click',()=>navigator.clipboard.writeText(sum));
     dl.addEventListener('click',()=>{
-      const b=new Blob([sum],{type:'text/plain'}), u=URL.createObjectURL(b), a=document.createElement('a');
-      a.href=u; a.download=(file?.name||'summary')+'.txt'; a.click(); URL.revokeObjectURL(u);
+      const b=new Blob([sum],{type:'text/plain'}),u=URL.createObjectURL(b),a=document.createElement('a');
+      a.href=u;a.download=(file?.name||'summary')+'.txt';a.click();URL.revokeObjectURL(u);
     });
   </script>
 </body>
