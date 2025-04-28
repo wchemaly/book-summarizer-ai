@@ -56,27 +56,22 @@
       cursor: pointer;
       transition: background .2s, border-color .2s;
     }
-    #drop-zone:hover,
-    #drop-zone:focus-within {
+    #drop-zone:hover, #drop-zone:focus-within {
       background: rgba(255,255,255,0.1);
       border-color: var(--border);
     }
     #drop-zone svg {
-      width: 48px;
-      height: 48px;
+      width: 48px; height: 48px;
       fill: var(--muted);
       transition: fill .2s;
     }
-    #drop-zone:hover svg,
-    #drop-zone:focus-within svg {
+    #drop-zone:hover svg, #drop-zone:focus-within svg {
       fill: var(--fg);
     }
     #drop-zone input {
-      position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      opacity: 0;
-      cursor: pointer;
+      position: absolute; top:0; left:0;
+      width:100%; height:100%; opacity:0;
+      cursor:pointer;
     }
     .microcopy {
       font-size: .85rem;
@@ -92,182 +87,148 @@
       word-break: break-all;
     }
     #clear-btn {
-      background: none;
-      border: none;
-      color: #ff6b6b;
-      font-size: 1.2rem;
-      cursor: pointer;
-      visibility: hidden;
-      align-self: flex-end;
+      background:none; border:none;
+      color:#ff6b6b; font-size:1.2rem;
+      cursor:pointer; visibility:hidden;
+      align-self:flex-end;
     }
     #file-info:not(:empty) + #clear-btn {
-      visibility: visible;
+      visibility:visible;
     }
     .controls {
-      display: flex;
-      gap: .6rem;
-      width: 100%;
+      display: flex; gap: .6rem; width:100%;
       margin-top: .25rem;
     }
     .length-btn {
-      flex: 1;
-      padding: .6rem;
-      border: 1px solid var(--fg);
-      background: var(--window-bg);
-      color: var(--fg);
-      font-size: 1rem;
-      cursor: pointer;
-      transition: background .2s, color .2s;
+      flex:1; padding:.6rem;
+      border:1px solid var(--fg);
+      background:var(--window-bg);
+      color:var(--fg); font-size:1rem;
+      cursor:pointer; transition:background .2s;
     }
     .length-btn:hover {
-      background: rgba(255,255,255,0.1);
+      background:rgba(255,255,255,0.1);
     }
     .length-btn.active {
-      background: var(--fg);
-      color: var(--bg-start);
+      background:var(--fg);
+      color:var(--bg-start);
     }
-    #summarize-btn {
-      width: 100%;
-      padding: 1rem;
-      margin-top: 0;
-      background: var(--fg);
-      color: var(--bg-start);
-      border: 1px solid var(--fg);
-      border-radius: 6px;
-      font-size: 1.2rem;
-      font-weight: 700;
-      cursor: pointer;
-      transition: transform .1s, box-shadow .2s, opacity .2s;
+    .primary-btn {
+      width:100%; padding:1rem;
+      margin-top:0;
+      background:var(--fg);
+      color:var(--bg-start);
+      border:1px solid var(--fg);
+      border-radius:6px;
+      font-size:1.2rem; font-weight:700;
+      cursor:pointer;
+      transition:transform .1s,box-shadow .2s,opacity .2s;
     }
-    #summarize-btn:hover {
-      transform: scale(1.02);
-      box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+    .primary-btn:hover {
+      transform:scale(1.02);
+      box-shadow:0 4px 12px rgba(255,255,255,0.2);
     }
-    #summarize-btn:active {
-      transform: scale(.98);
+    .primary-btn:active {
+      transform:scale(.98);
     }
-    #summarize-btn:disabled {
-      opacity: .5;
-      cursor: not-allowed;
+    .primary-btn:disabled {
+      opacity:.5; cursor:not-allowed;
     }
     .secondary-btn {
-      width: 100%;
-      padding: 1rem;
-      background: transparent;
-      border: 1px solid var(--fg);
-      color: var(--fg);
-      font-size: 1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background .2s, transform .1s;
+      width:100%; padding:1rem;
+      background:transparent;
+      border:1px solid var(--fg);
+      color:var(--fg);
+      font-size:1rem; border-radius:6px;
+      cursor:pointer; transition:background .2s,transform .1s;
     }
     .secondary-btn:hover {
-      background: rgba(255,255,255,0.1);
-      transform: scale(1.02);
+      background:rgba(255,255,255,0.1);
+      transform:scale(1.02);
     }
     #loading-overlay {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity .2s;
-      z-index: 20;
+      position:fixed;top:0;left:0;
+      width:100%;height:100%;
+      background:rgba(0,0,0,0.8);
+      display:flex;justify-content:center;align-items:center;
+      visibility:hidden;opacity:0;
+      transition:opacity .2s; z-index:20;
     }
     #loading-overlay.show {
-      visibility: visible;
-      opacity: 1;
+      visibility:visible;opacity:1;
     }
     .spinner {
-      border: 8px solid var(--muted);
-      border-top: 8px solid var(--fg);
-      border-radius: 50%;
-      width: 60px; height: 60px;
-      animation: spin .8s linear infinite;
+      border:8px solid var(--muted);
+      border-top:8px solid var(--fg);
+      border-radius:50%;
+      width:60px; height:60px;
+      animation:spin .8s linear infinite;
     }
-    @keyframes spin { to { transform: rotate(360deg) } }
+    @keyframes spin { to{transform:rotate(360deg)} }
+    /* landscape modal */
     #summary-modal {
-      position: fixed;
-      top: 50%; left: 50%;
-      transform: translate(-50%,-50%);
-      width: 90%; max-width: 500px; max-height: 75vh;
+      position:fixed; top:50%; left:50%;
+      transform:translate(-50%,-50%);
+      width: 80%; max-width: 800px;
+      height: 60vh; max-height: 60vh;
       background: var(--window-bg);
-      border-radius: 8px;
-      display: flex;
-      flex-direction: column;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity .2s;
-      z-index: 30;
+      border-radius:8px;
+      box-shadow:0 8px 24px rgba(0,0,0,0.6);
+      display:flex; flex-direction:column;
+      visibility:hidden; opacity:0;
+      transition:opacity .2s;
+      z-index:30;
     }
     #summary-modal.show {
-      visibility: visible;
-      opacity: 1;
+      visibility:visible; opacity:1;
     }
     .modal-header {
-      padding: 1rem 1.2rem;
-      border-bottom: 1px solid var(--border);
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
+      padding:1rem 1.5rem;
+      border-bottom:1px solid var(--border);
+      display:flex; justify-content:space-between; align-items:center;
     }
     .modal-header h2 {
-      font-size: 1.4rem;
-      font-weight: 700;
+      font-size:1.6rem; font-weight:700; color:var(--fg);
     }
     .close-btn {
-      background: none;
-      border: none;
-      font-size: 1.5rem;
-      cursor: pointer;
-      color: var(--fg);
+      background:none; border:none;
+      font-size:1.5rem; cursor:pointer; color:var(--fg);
     }
     #summary-content {
-      padding: 1.5rem;
-      overflow-y: auto;
-      max-height: calc(75vh - 4rem);
-      line-height: 1.6;
-      font-size: 1rem;
-      color: #eee;
-      margin-bottom: 1rem;
+      flex:1; overflow-y:auto;
+      padding:1.5rem;
+      font-size:1rem; line-height:1.6;
+      color:#eee; text-align:left;
+      white-space: normal;
     }
     .modal-footer {
-      padding: 0 1.5rem 1.5rem;
-      border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: flex-end;
-      gap: .75rem;
+      padding:1rem 1.5rem;
+      border-top:1px solid var(--border);
+      display:flex; justify-content:flex-end; gap:1rem;
     }
     .modal-footer button {
-      padding: .75rem 1.25rem;
-      background: var(--fg);
-      color: var(--bg-start);
-      border: 1px solid var(--fg);
-      border-radius: 4px;
-      font-size: 1rem;
-      cursor: pointer;
-      transition: transform .1s, box-shadow .2s;
+      padding:.75rem 1.25rem;
+      background:var(--fg);
+      color:var(--bg-start);
+      border:1px solid var(--fg);
+      border-radius:4px;
+      font-size:1rem; cursor:pointer;
+      transition:transform .1s,box-shadow .2s;
     }
     .modal-footer button:hover {
-      transform: scale(1.02);
-      box-shadow: 0 4px 12px rgba(255,255,255,0.2);
+      transform:scale(1.02);
+      box-shadow:0 4px 12px rgba(255,255,255,0.2);
     }
     footer {
-      position: fixed;
-      bottom: 0; left: 50%;
-      transform: translateX(-50%);
-      width: 100%; max-width: 360px;
-      padding: .6rem 0;
-      border-top: 1px solid var(--border);
-      background: var(--bg-end);
-      color: rgba(255,255,255,0.8);
-      font-size: .75rem;
-      text-align: center;
-      z-index: 10;
+      position:fixed; bottom:0; left:50%;
+      transform:translateX(-50%);
+      width:100%; max-width:360px;
+      padding:.6rem 0;
+      border-top:1px solid var(--border);
+      background:var(--bg-end);
+      color:rgba(255,255,255,0.85);
+      font-size:.75rem; text-align:center;
+      z-index:10;
     }
   </style>
 </head>
@@ -287,7 +248,6 @@
     </label>
 
     <div class="microcopy">Max 20 MB • PDF / EPUB</div>
-
     <div id="file-info" role="status"></div>
     <button id="clear-btn">×</button>
 
@@ -297,7 +257,7 @@
       <button class="length-btn" data-length="long">Long</button>
     </div>
 
-    <button id="summarize-btn" disabled>Summarize</button>
+    <button id="summarize-btn" class="primary-btn" disabled>Summarize</button>
     <button class="secondary-btn" onclick="window.location='sample.pdf'">Sample PDF</button>
   </div>
 
@@ -396,17 +356,15 @@
     window.addEventListener('click', e => { if (e.target === md) md.classList.remove('show'); });
     window.addEventListener('keydown', e => { if (e.key === 'Escape') md.classList.remove('show'); });
 
-    cp.addEventListener('click', () => {
-      navigator.clipboard.writeText(sum);
-    });
+    cp.addEventListener('click', () => navigator.clipboard.writeText(sum));
     dl.addEventListener('click', () => {
-      const b = new Blob([sum], { type: 'text/plain' });
-      const u = URL.createObjectURL(b);
-      const a = document.createElement('a');
-      a.href = u;
+      const blob = new Blob([sum], { type: 'text/plain' }),
+            url  = URL.createObjectURL(blob),
+            a    = document.createElement('a');
+      a.href     = url;
       a.download = (file?.name || 'summary') + '.txt';
       a.click();
-      URL.revokeObjectURL(u);
+      URL.revokeObjectURL(url);
     });
   </script>
 
