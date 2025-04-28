@@ -12,183 +12,190 @@
       --border:#555555;
       --error: #ff6b6b;
     }
-    *, *::before, *::after { box-sizing:border-box; margin:0; padding:0 }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
     body {
       background: var(--bg);
       color: var(--fg);
-      font-family:'JetBrains Mono',monospace;
-      display:flex;
-      align-items:center;
-      justify-content:center;
-      height:100vh;
-      text-align:center;
+      font-family: 'JetBrains Mono', monospace;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      text-align: center;
     }
 
-    h1 { font-size:2rem; margin-bottom:.4rem; }
-    p  { color:var(--muted); margin-bottom:.8rem; font-size:.95rem; }
+    h1 { font-size: 2.1rem; margin-bottom: .6rem; }
+    p  { color: var(--muted); margin-bottom: 1rem; font-size: 1rem; }
 
     .panel {
-      position:relative;
-      z-index:10;
-      width:280px;                     /* reverted from 320 */
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:.5rem;                       /* tightened spacing */
+      position: relative;
+      z-index: 10;
+      width: 360px;               /* ← widened back to 360 */
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;                  /* ← more breathing room */
     }
 
+    /* drag/drop box */
     #drop-zone {
-      width:100%;
-      padding:1.5rem;                  /* a little less padding */
-      border:2px dashed var(--border);
-      border-radius:6px;
-      color:var(--muted);
-      transition:background .3s,border-color .3s,color .3s;
-      cursor:pointer;
-      display:flex;
-      flex-direction:column;
-      align-items:center;
-      gap:.4rem;
-      font-size:.95rem;
+      width: 100%;
+      padding: 2rem;              /* ← full 2rem padding */
+      border: 2px dashed var(--border);
+      border-radius: 6px;
+      color: var(--muted);
+      transition: background .3s, border-color .3s, color .3s;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: .75rem;
+      font-size: 1rem;
     }
     #drop-zone.dragover {
-      background:#1a1a1a;
-      border-color:var(--fg);
-      color:var(--fg);
+      background: #1a1a1a;
+      border-color: var(--fg);
+      color: var(--fg);
     }
     #drop-zone svg {
-      width:28px; height:28px;
-      fill:var(--muted);
-      transition:fill .3s;
+      width: 32px; height: 32px;
+      fill: var(--muted);
+      transition: fill .3s;
     }
-    #drop-zone.dragover svg { fill:var(--fg); }
-    #drop-zone input { display:none; }
+    #drop-zone.dragover svg { fill: var(--fg); }
+    #drop-zone input { display: none; }
 
+    /* file info + clear */
     #file-info {
-      font-size:.85rem;
-      color:var(--muted);
-      display:flex;
-      align-items:center;
-      gap:.4rem;
-      word-break:break-all;
+      font-size: .9rem;
+      color: var(--muted);
+      display: flex;
+      align-items: center;
+      gap: .5rem;
+      word-break: break-all;
     }
     #clear-btn {
-      background:none;
-      border:none;
-      color:var(--error);
-      font-size:1.1rem;
-      cursor:pointer;
-      visibility:hidden;
+      background: none;
+      border: none;
+      color: var(--error);
+      font-size: 1.2rem;
+      cursor: pointer;
+      visibility: hidden;
     }
 
+    /* summary‐length toggles */
     #length-control {
-      display:flex;
-      gap:.4rem;
+      display: flex;
+      gap: .6rem;
     }
     .length-btn {
-      padding:.3rem .6rem;
-      border:1px solid var(--fg);
-      background:none;
-      color:var(--fg);
-      border-radius:4px;
-      cursor:pointer;
-      transition:background .3s,color .3s;
-      font-size:.88rem;
+      padding: .4rem .9rem;
+      border: 1px solid var(--fg);
+      background: none;
+      color: var(--fg);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: background .3s, color .3s;
+      font-size: .95rem;
     }
-    .length-btn:hover { background:var(--fg); color:var(--bg); }
+    .length-btn:hover { background: var(--fg); color: var(--bg); }
     .length-btn.active {
-      background:var(--fg);
-      color:var(--bg);
+      background: var(--fg);
+      color: var(--bg);
     }
 
+    /* summarize button */
     #summarize-btn {
-      margin-top:.3rem;
-      padding:.5rem 1rem;
-      background:var(--fg);
-      color:var(--bg);
-      border:none;
-      border-radius:6px;
-      cursor:pointer;
-      transition:opacity .3s;
-      font-size:.95rem;
+      margin-top: .5rem;
+      padding: .6rem 1.2rem;
+      background: var(--fg);
+      color: var(--bg);
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      transition: opacity .3s;
+      font-size: 1rem;
     }
     #summarize-btn:disabled {
-      opacity:.5;
-      cursor:not-allowed;
+      opacity: .5;
+      cursor: not-allowed;
     }
 
+    /* full-screen loader */
     #loading-overlay {
-      position:fixed; top:0; left:0;
-      width:100%; height:100%;
-      background:rgba(0,0,0,0.8);
-      display:flex; align-items:center; justify-content:center;
-      visibility:hidden; opacity:0;
-      transition:opacity .3s;
-      z-index:20;
+      position: fixed; top: 0; left: 0;
+      width: 100%; height: 100%;
+      background: rgba(0,0,0,0.8);
+      display: flex; align-items: center; justify-content: center;
+      visibility: hidden; opacity: 0;
+      transition: opacity .3s;
+      z-index: 20;
     }
     #loading-overlay.show {
-      visibility:visible; opacity:1;
+      visibility: visible; opacity: 1;
     }
     .spinner {
-      border:6px solid var(--border);
-      border-top:6px solid var(--fg);
-      border-radius:50%;
-      width:50px; height:50px;
-      animation:spin .8s linear infinite;
+      border: 8px solid var(--border);
+      border-top: 8px solid var(--fg);
+      border-radius: 50%;
+      width: 60px; height: 60px;
+      animation: spin .8s linear infinite;
     }
-    @keyframes spin { to{transform:rotate(360deg);} }
+    @keyframes spin { to { transform: rotate(360deg); } }
 
+    /* summary modal */
     #summary-modal {
-      position:fixed; top:50%; left:50%;
-      transform:translate(-50%,-50%);
-      background:var(--bg); color:var(--fg);
-      width:90%; max-width:450px; max-height:70vh;
-      border-radius:8px;
-      display:flex; flex-direction:column;
-      visibility:hidden; opacity:0;
-      transition:opacity .3s;
-      z-index:30;
+      position: fixed; top: 50%; left: 50%;
+      transform: translate(-50%,-50%);
+      background: var(--bg); color: var(--fg);
+      width: 90%; max-width: 500px; max-height: 70vh;
+      border-radius: 8px;
+      display: flex; flex-direction: column;
+      visibility: hidden; opacity: 0;
+      transition: opacity .3s;
+      z-index: 30;
     }
     #summary-modal.show {
-      visibility:visible; opacity:1;
+      visibility: visible; opacity: 1;
     }
     .modal-header {
-      display:flex; justify-content:space-between; align-items:center;
-      padding:1rem; border-bottom:1px solid var(--border);
+      display: flex; justify-content: space-between; align-items: center;
+      padding: 1rem; border-bottom: 1px solid var(--border);
     }
-    .modal-header h2 { font-size:1.2rem; }
+    .modal-header h2 { font-size: 1.3rem; }
     .close-btn {
-      background:none; border:none;
-      color:var(--fg); font-size:1.4rem;
-      cursor:pointer;
+      background: none; border: none;
+      color: var(--fg); font-size: 1.5rem;
+      cursor: pointer;
     }
     #summary-content {
-      padding:1rem; overflow-y:auto;
-      white-space:pre-wrap; line-height:1.5;
-      flex:1; font-size:.93rem;
+      padding: 1rem;
+      overflow-y: auto;
+      white-space: pre-wrap; line-height: 1.5;
+      flex: 1; font-size: .95rem;
     }
     .modal-footer {
-      padding:.75rem 1rem;
-      border-top:1px solid var(--border);
-      display:flex; gap:.5rem; justify-content:flex-end;
+      padding: .75rem 1rem;
+      border-top: 1px solid var(--border);
+      display: flex; gap: .5rem; justify-content: flex-end;
     }
     .modal-footer button {
-      padding:.5rem .9rem;
-      background:var(--fg);
-      color:var(--bg);
-      border:none; border-radius:4px;
-      cursor:pointer;
-      font-size:.9rem;
+      padding: .5rem 1rem;
+      background: var(--fg);
+      color: var(--bg);
+      border: none; border-radius: 4px;
+      cursor: pointer; font-size: .95rem;
     }
 
     footer {
-      position:absolute; bottom:15px;
-      font-size:.75rem; color:var(--muted);
-      z-index:10;
+      position: absolute; bottom: 15px;
+      font-size: .75rem; color: var(--muted);
+      z-index: 10;
     }
   </style>
 </head>
 <body>
+
   <div class="panel">
     <h1>AI Book Summarizer</h1>
     <p>Summarize any book in minutes.</p>
@@ -248,7 +255,7 @@
         lastSummary   = '',
         summaryLength = 'medium';
 
-    function handleFile(file){
+    function handleFile(file) {
       selectedFile = file;
       fileInfo.textContent = `📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
       summarizeBtn.disabled = false;
@@ -256,16 +263,22 @@
     }
 
     ['dragenter','dragover'].forEach(e=>
-      dropZone.addEventListener(e, ev=>{ ev.preventDefault(); dropZone.classList.add('dragover'); })
+      dropZone.addEventListener(e, ev=>{
+        ev.preventDefault();
+        dropZone.classList.add('dragover');
+      })
     );
     ['dragleave','drop'].forEach(e=>
-      dropZone.addEventListener(e, ev=>{ ev.preventDefault(); dropZone.classList.remove('dragover'); })
+      dropZone.addEventListener(e, ev=>{
+        ev.preventDefault();
+        dropZone.classList.remove('dragover');
+      })
     );
     dropZone.addEventListener('drop', ev=>{
       if (ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
     });
-    dropZone.addEventListener('click', ()=> fileInput.click());
-    fileInput.addEventListener('change', ()=> {
+    dropZone.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', () => {
       if (fileInput.files.length) handleFile(fileInput.files[0]);
     });
 
@@ -298,13 +311,13 @@
 
       try {
         const res  = await fetch('https://book-summarizer-backend.onrender.com/upload', {
-          method:'POST', body:fd
+          method:'POST', body: fd
         });
         const data = await res.json();
         lastSummary = data.summary || data.excerpt || 'No summary available.';
         summaryContent.textContent = lastSummary;
         summaryModal.classList.add('show');
-      } catch(err) {
+      } catch (err) {
         console.error(err);
         alert('Error summarizing file.');
       } finally {
@@ -314,7 +327,7 @@
     });
 
     modalClose.addEventListener('click', ()=> summaryModal.classList.remove('show'));
-    window.addEventListener('keydown', ev=> ev.key==='Escape' && summaryModal.classList.remove('show'));
+    window.addEventListener('keydown', ev=> ev.key === 'Escape' && summaryModal.classList.remove('show'));
     window.addEventListener('click', ev=> {
       if (ev.target === summaryModal) summaryModal.classList.remove('show');
     });
@@ -325,7 +338,7 @@
         .catch(()=> alert('Copy failed.'));
     });
     downloadBtn.addEventListener('click', ()=>{
-      const blob = new Blob([lastSummary], {type:'text/plain'});
+      const blob = new Blob([lastSummary], { type:'text/plain' });
       const url  = URL.createObjectURL(blob);
       const a    = document.createElement('a');
       a.href     = url;
