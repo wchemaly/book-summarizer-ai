@@ -30,22 +30,22 @@
     .panel {
       position: relative;
       z-index: 10;
-      width: 360px;               /* ← widened back to 360 */
+      width: 360px;               /* ← restored 360px width */
       display: flex;
       flex-direction: column;
       align-items: center;
-      gap: 1rem;                  /* ← more breathing room */
+      gap: 1rem;
     }
 
     /* drag/drop box */
     #drop-zone {
+      position: relative;
       width: 100%;
       padding: 2rem;              /* ← full 2rem padding */
       border: 2px dashed var(--border);
       border-radius: 6px;
       color: var(--muted);
       transition: background .3s, border-color .3s, color .3s;
-      cursor: pointer;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -63,7 +63,15 @@
       transition: fill .3s;
     }
     #drop-zone.dragover svg { fill: var(--fg); }
-    #drop-zone input { display: none; }
+
+    /* full-cover input makes both click & drop work */
+    #drop-zone input {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      opacity: 0;
+      cursor: pointer;
+    }
 
     /* file info + clear */
     #file-info {
@@ -277,7 +285,6 @@
     dropZone.addEventListener('drop', ev=>{
       if (ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
     });
-    dropZone.addEventListener('click', () => fileInput.click());
     fileInput.addEventListener('change', () => {
       if (fileInput.files.length) handleFile(fileInput.files[0]);
     });
@@ -310,7 +317,7 @@
       fd.append('length', summaryLength);
 
       try {
-        const res  = await fetch('https://book-summarizer-backend.onrender.com/upload', {
+        const res  = await fetch('https://book-summarizer-backend.onrender.com/upload',{
           method:'POST', body: fd
         });
         const data = await res.json();
