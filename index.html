@@ -1,251 +1,218 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
+  <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>AI Book Summarizer</title>
   <style>
-    /* Reset & Centered Base */
-    * { box-sizing: border-box; margin: 0; padding: 0; }
-    body {
-      background: #0f0f0f;
-      color: #eee;
+    /* full-screen Matrix canvas behind everything */
+    body, html {
+      margin: 0; padding: 0;
+      overflow: hidden;
+      height: 100%; width: 100%;
+      background: black;
       font-family: 'JetBrains Mono', monospace;
-      display: flex;
-      flex-direction: column;
-      justify-content: center;      /* vertically center */
-      align-items: center;          /* horizontally center */
-      height: 100vh;                /* full viewport */
-      text-align: center;
-    }
-
-    h1 { font-size: 2rem; margin-bottom: 0.5rem; }
-    p  { color: #888; margin-bottom: 1.5rem; }
-
-    /* Upload Box */
-    #drop-zone {
-      border: 2px dashed #666;
-      border-radius: 6px;
-      width: 320px;
-      padding: 40px;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      color: #ccc;
-      transition: background .3s, border-color .3s;
-      cursor: pointer;
-      margin-bottom: 1rem;
-    }
-    #drop-zone.dragover { background: #222; border-color: #999; }
-    #drop-zone input { display: none; }
-
-    /* File Info */
-    #file-info {
-      font-size: 0.9rem;
-      color: #aaa;
-      margin-bottom: 1rem;
-      max-width: 320px;
-      word-break: break-all;
-    }
-
-    /* Summarize Button */
-    button {
-      padding: 10px 24px;
-      background: none;
-      border: 1px solid #eee;
       color: #eee;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background .3s, color .3s;
-      font-family: inherit;
     }
-    button:hover { background: #eee; color: #0f0f0f; }
-
-    /* Loading Overlay (full-screen) */
-    #loading-overlay {
-      position: fixed; top: 0; left: 0;
+    #matrix {
+      position: fixed;
+      top: 0; left: 0;
       width: 100%; height: 100%;
-      background: rgba(0,0,0,0.8);
-      display: flex; justify-content: center; align-items: center;
-      visibility: hidden; opacity: 0;
-      transition: opacity .3s;
-      z-index: 2000;
+      z-index: 1;
     }
-    #loading-overlay.show {
-      visibility: visible; opacity: 1;
+    /* UI container sits above the canvas */
+    .ui-container {
+      position: relative;
+      z-index: 2;
+      height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+      text-align: center;
+      pointer-events: none; /* allow clicks to pass to children only */
     }
-    .spinner {
-      border: 8px solid #444;
-      border-top: 8px solid #eee;
+    h1, p, .upload, button {
+      pointer-events: auto; /* re-enable interaction */
+    }
+    h1 {
+      font-size: 2rem; margin: 0 0 0.5rem;
+    }
+    p {
+      color: #aaa; margin: 0 0 2rem;
+    }
+    .upload {
+      border: 2px dashed #666;
+      padding: 2rem; width: 20rem;
+      border-radius: 0.5rem; cursor: pointer;
+      transition: background 0.3s;
+      background: rgba(0,0,0,0.2);
+      margin-bottom: 1.5rem;
+    }
+    .upload:hover {
+      background: rgba(255,255,255,0.05);
+    }
+    button {
+      padding: 0.75rem 1.5rem;
+      background: none; border: 1px solid #eee;
+      border-radius: 0.5rem; cursor: pointer;
+      transition: background 0.3s, color 0.3s;
+    }
+    button:hover {
+      background: #eee; color: #111;
+    }
+    #loader {
+      display: none;
+      margin-top: 1rem;
+      border: 6px solid #444;
+      border-top: 6px solid #eee;
       border-radius: 50%;
-      width: 60px; height: 60px;
-      animation: spin .8s linear infinite;
+      width: 2.5rem; height: 2.5rem;
+      animation: spin 1s linear infinite;
     }
     @keyframes spin {
-      0% { transform: rotate(0deg);} 100% { transform: rotate(360deg);}
+      0%   { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
     }
-
-    /* Modal (centered box) */
-    #summary-modal {
+    .modal {
       position: fixed; top: 50%; left: 50%;
       transform: translate(-50%, -50%);
-      background: #1a1a1a; color: #eee;
-      width: 90%; max-width: 500px;
-      height: auto; max-height: 70vh;
-      border-radius: 8px;
-      display: flex; flex-direction: column;
-      visibility: hidden; opacity: 0;
-      transition: opacity .3s;
-      z-index: 3000;
+      background: rgba(30,30,30,0.95);
+      padding: 1.5rem; border-radius: 0.5rem;
+      max-width: 30rem; width: 90%;
+      color: #eee; display: none;
+      z-index: 3; text-align: left;
     }
-    #summary-modal.show {
-      visibility: visible; opacity: 1;
-    }
+    .modal.show { display: block; }
     .modal-header {
-      display: flex; justify-content: space-between; align-items: center;
-      padding: 1rem; border-bottom: 1px solid #333;
+      display: flex; justify-content: space-between;
+      align-items: center; margin-bottom: 1rem;
     }
-    .modal-header h2 { margin: 0; font-size: 1.25rem; }
     .close-btn {
       background: none; border: none;
-      color: #eee; font-size: 1.5rem; cursor: pointer;
+      color: #eee; font-size: 1.25rem; cursor: pointer;
     }
-    #summary-content {
-      padding: 1rem; overflow-y: auto;
-      white-space: pre-wrap; line-height: 1.5;
-      font-size: 0.95rem;
-    }
-    .modal-footer {
-      padding: 0.75rem 1rem;
-      border-top: 1px solid #333;
-      display: flex; justify-content: flex-end; gap: 0.5rem;
-    }
-    .modal-footer button { font-size: 0.9rem; }
-
     footer {
-      position: absolute; bottom: 15px;
-      font-size: 0.8rem; color: #555;
+      position: fixed; bottom: 1rem; width: 100%;
+      text-align: center; color: #555; font-size: 0.75rem;
+      z-index: 2;
+      pointer-events: none;
     }
   </style>
 </head>
 <body>
 
-  <h1>AI Book Summarizer</h1>
-  <p>Summarize any book in minutes.</p>
+  <!-- 1) Matrix canvas -->
+  <canvas id="matrix"></canvas>
 
-  <label id="drop-zone">
-    <input type="file" id="file-input" accept=".pdf,.epub" />
-    Upload or Drop a PDF/EPUB here
-  </label>
-  <div id="file-info"></div>
+  <!-- 2) UI layer -->
+  <div class="ui-container">
+    <h1>AI Book Summarizer</h1>
+    <p>Summarize any book in minutes.</p>
 
-  <button id="summarize-btn">Summarize</button>
+    <label class="upload" id="file-label">
+      <input type="file" id="file-input" style="display: none" accept=".pdf,.epub"/>
+      Click to upload a book (PDF/EPUB)
+    </label>
 
-  <!-- Full-screen loader -->
-  <div id="loading-overlay">
-    <div class="spinner"></div>
+    <button onclick="summarize()">Summarize</button>
+    <div id="loader"></div>
   </div>
 
-  <!-- Centered summary modal -->
-  <div id="summary-modal">
+  <!-- 3) Summary modal -->
+  <div class="modal" id="summary-modal">
     <div class="modal-header">
-      <h2>Summary</h2>
-      <button class="close-btn" id="modal-close">&times;</button>
+      <h3>Summary</h3>
+      <button class="close-btn" onclick="closeModal()">×</button>
     </div>
-    <div id="summary-content"></div>
-    <div class="modal-footer">
-      <button id="copy-btn">Copy</button>
-      <button id="download-btn">Download</button>
-    </div>
+    <div id="summary-text"></div>
   </div>
 
   <footer>© 2025 | Built by You</footer>
 
   <script>
-    const dropZone = document.getElementById('drop-zone');
-    const fileInput = document.getElementById('file-input');
-    const fileInfo  = document.getElementById('file-info');
-    const summarizeBtn = document.getElementById('summarize-btn');
-    const loadingOverlay = document.getElementById('loading-overlay');
-    const summaryModal = document.getElementById('summary-modal');
-    const modalClose = document.getElementById('modal-close');
-    const summaryContent = document.getElementById('summary-content');
-    const copyBtn = document.getElementById('copy-btn');
-    const downloadBtn = document.getElementById('download-btn');
+  // —— Matrix-style waterfall setup —— 
+  const canvas = document.getElementById('matrix');
+  const ctx    = canvas.getContext('2d');
+  let W = canvas.width  = innerWidth;
+  let H = canvas.height = innerHeight;
 
-    let selectedFile = null, lastSummary = '';
+  const words = [
+    'Knowledge','Power','Wisdom','Truth','Insight','Mastery','Strength','Clarity',
+    'Intelligence','Perception','Awareness','Vision','Genius','Revelation',
+    'Sovereignty','Understanding','Illumination','Authority','Strategy','Dominion',
+    'Consciousness','Discovery','Discipline','Awakening','Willpower','Purpose',
+    'Influence','Cognition','Innovation','Legacy','Enlightenment','Intuition',
+    'Command','Ascendancy','Fortitude','Honor','Reality','Foresight','Memory',
+    'Adaptation','Ingenuity','Reason','Potential','Sovereignty','Sagacity',
+    'Aptitude','Precision','Curiosity','Alchemy','Logos','Ethos','Praxis','Nexus',
+    'Synthesis','Momentum','Transcendence'
+  ];
+  const fontSize = 24;
+  const columns  = Math.floor(W / fontSize);
+  const drops    = Array(columns).fill(0).map(_ => Math.random() * H);
 
-    // Drag & drop styling + file selection
-    ['dragenter','dragover'].forEach(e => dropZone.addEventListener(e, ev => {
-      ev.preventDefault(); dropZone.classList.add('dragover');
-    }));
-    ['dragleave','drop'].forEach(e => dropZone.addEventListener(e, ev => {
-      ev.preventDefault(); dropZone.classList.remove('dragover');
-    }));
-    dropZone.addEventListener('drop', ev => {
-      if (ev.dataTransfer.files.length) {
-        ev.preventDefault();
-        handleFile(ev.dataTransfer.files[0]);
-      }
-    });
-    dropZone.addEventListener('click', () => fileInput.click());
-    fileInput.addEventListener('change', () => {
-      if (fileInput.files.length) handleFile(fileInput.files[0]);
-    });
-
-    function handleFile(file) {
-      selectedFile = file;
-      fileInfo.textContent = `📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
+  function drawMatrix() {
+    ctx.fillStyle = 'rgba(0,0,0,0.05)';
+    ctx.fillRect(0,0,W,H);
+    ctx.fillStyle = '#FFF';
+    ctx.font = fontSize + 'px monospace';
+    for (let i = 0; i < columns; i++) {
+      const text = words[Math.floor(Math.random() * words.length)];
+      const x = i * fontSize;
+      const y = drops[i] * fontSize;
+      ctx.fillText(text, x, y);
+      if (y > H && Math.random() > 0.975) drops[i] = 0;
+      drops[i]++;
     }
+    requestAnimationFrame(drawMatrix);
+  }
+  drawMatrix();
 
-    // Summarize click
-    summarizeBtn.addEventListener('click', async () => {
-      if (!selectedFile) return alert('Please upload a file first.');
-      loadingOverlay.classList.add('show');
-      summaryContent.textContent = '';
+  window.addEventListener('resize', () => {
+    W = canvas.width  = innerWidth;
+    H = canvas.height = innerHeight;
+  });
 
-      const fd = new FormData();
-      fd.append('file', selectedFile);
+  // —— File upload & summarizer UI —— 
+  let selectedFile = null;
+  const fileInput  = document.getElementById('file-input');
+  const fileLabel  = document.getElementById('file-label');
 
-      try {
-        const res = await fetch('https://book-summarizer-backend.onrender.com/upload', {
-          method: 'POST', body: fd
-        });
-        const data = await res.json();
-        lastSummary = data.summary || data.excerpt || 'No summary available.';
-        summaryContent.textContent = lastSummary;
-        summaryModal.classList.add('show');
-      } catch (err) {
-        console.error(err);
-        alert('Error summarizing file.');
-      } finally {
-        loadingOverlay.classList.remove('show');
-      }
+  fileInput.addEventListener('change', e => {
+    selectedFile = e.target.files[0];
+    if (selectedFile) fileLabel.innerText = selectedFile.name;
+  });
+
+  function summarize() {
+    if (!selectedFile) {
+      alert('Please upload a file first.'); 
+      return;
+    }
+    const loader = document.getElementById('loader');
+    loader.style.display = 'block';
+
+    const fdata = new FormData();
+    fdata.append('file', selectedFile);
+
+    fetch('https://book-summarizer-backend.onrender.com/upload', {
+      method: 'POST', body: fdata
+    })
+    .then(res => res.json())
+    .then(data => {
+      loader.style.display = 'none';
+      document.getElementById('summary-text').innerText =
+        data.summary || data.excerpt || 'No summary available.';
+      document.getElementById('summary-modal').classList.add('show');
+    })
+    .catch(err => {
+      loader.style.display = 'none';
+      console.error(err);
+      alert('Error summarizing file.');
     });
+  }
 
-    // Modal close
-    modalClose.addEventListener('click', () =>
-      summaryModal.classList.remove('show')
-    );
-    window.addEventListener('click', ev => {
-      if (ev.target === summaryModal) summaryModal.classList.remove('show');
-    });
-
-    // Copy & Download
-    copyBtn.addEventListener('click', () => {
-      navigator.clipboard.writeText(lastSummary)
-        .then(_=> alert('Copied!'))
-        .catch(_=> alert('Copy failed.'));
-    });
-    downloadBtn.addEventListener('click', () => {
-      const blob = new Blob([lastSummary], {type:'text/plain'});
-      const url  = URL.createObjectURL(blob);
-      const a    = document.createElement('a');
-      a.href     = url;
-      a.download = (selectedFile?.name||'summary') + '.txt';
-      a.click();
-      URL.revokeObjectURL(url);
-    });
+  function closeModal() {
+    document.getElementById('summary-modal').classList.remove('show');
+  }
   </script>
 </body>
 </html>
