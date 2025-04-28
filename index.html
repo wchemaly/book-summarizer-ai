@@ -14,10 +14,9 @@
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
+      justify-content: center;
       min-height: 100vh;
       text-align: center;
-      padding-top: 40px;
     }
 
     h1 {
@@ -38,21 +37,19 @@
       cursor: pointer;
       background-color: transparent;
       color: #eee;
-      margin-bottom: 10px;
+      margin-bottom: 20px;
+      transition: background 0.3s ease;
     }
 
     .upload:hover {
       background-color: #1a1a1a;
     }
 
-    #file-name {
-      margin-top: 8px;
-      font-size: 14px;
-      color: #aaa;
+    input[type="file"] {
+      display: none;
     }
 
     button {
-      margin-top: 20px;
       padding: 12px 24px;
       background: none;
       border: 1px solid #eee;
@@ -60,7 +57,7 @@
       border-radius: 6px;
       font-family: inherit;
       cursor: pointer;
-      transition: 0.3s ease;
+      transition: background 0.3s ease, color 0.3s ease;
     }
 
     button:hover {
@@ -68,25 +65,56 @@
       color: #0f0f0f;
     }
 
-    #loading {
-      margin-top: 20px;
-      font-size: 16px;
+    .modal {
       display: none;
-      color: #888;
+      position: fixed;
+      z-index: 999;
+      background-color: rgba(0, 0, 0, 0.8);
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      align-items: center;
+      justify-content: center;
     }
 
-    #summary {
-      margin-top: 40px;
+    .modal-content {
+      background-color: #1a1a1a;
+      margin: auto;
       padding: 20px;
-      background: #1a1a1a;
-      border-radius: 8px;
+      border: 1px solid #888;
+      width: 80%;
       max-width: 600px;
+      color: #eee;
+      border-radius: 8px;
       text-align: left;
-      white-space: pre-wrap;
+      overflow-y: auto;
+      max-height: 80vh;
+    }
+
+    .close {
+      color: #aaa;
+      float: right;
+      font-size: 24px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+
+    .close:hover,
+    .close:focus {
+      color: #fff;
+    }
+
+    .loading {
+      margin-top: 20px;
+      color: #aaa;
+      font-size: 14px;
     }
 
     footer {
-      margin-top: 60px;
+      position: fixed;
+      bottom: 15px;
       font-size: 12px;
       color: #555;
     }
@@ -96,61 +124,81 @@
   <h1>AI Book Summarizer</h1>
   <p>Summarize any book in minutes.</p>
 
-  <label class="upload">
-    <input type="file" id="fileInput" style="display: none" />
+  <label class="upload" id="uploadLabel">
+    <input type="file" id="fileInput" />
     Click to upload a book (PDF/EPUB)
   </label>
 
-  <div id="file-name"></div>
+  <button id="summarizeBtn">Summarize</button>
 
-  <button onclick="uploadAndSummarize()">Summarize</button>
+  <div class="loading" id="loading" style="display:none;">Loading...</div>
 
-  <div id="loading">Summarizing, please wait...</div>
-
-  <div id="summary"></div>
+  <div id="summaryModal" class="modal">
+    <div class="modal-content">
+      <span class="close" id="closeModal">&times;</span>
+      <pre id="summaryText" style="white-space: pre-wrap;"></pre>
+    </div>
+  </div>
 
   <footer>© 2025 | Built by You</footer>
 
   <script>
-    let selectedFile = null;
+    const uploadLabel = document.getElementById('uploadLabel');
+    const fileInput = document.getElementById('fileInput');
+    const summarizeBtn = document.getElementById('summarizeBtn');
+    const loading = document.getElementById('loading');
+    const summaryModal = document.getElementById('summaryModal');
+    const summaryText = document.getElementById('summaryText');
+    const closeModal = document.getElementById('closeModal');
 
-    document.getElementById('fileInput').addEventListener('change', (e) => {
-      selectedFile = e.target.files[0];
-      if (selectedFile) {
-        document.getElementById('file-name').innerText = `Uploaded: ${selectedFile.name}`;
+    let uploadedFile = null;
+
+    fileInput.addEventListener('change', (e) => {
+      uploadedFile = e.target.files[0];
+      if (uploadedFile) {
+        uploadLabel.innerText = uploadedFile.name;
       }
     });
 
-    async function uploadAndSummarize() {
-      if (!selectedFile) {
+    summarizeBtn.addEventListener('click', async () => {
+      if (!uploadedFile) {
         alert('Please upload a file first.');
         return;
       }
 
-      document.getElementById('loading').style.display = 'block';
-      document.getElementById('summary').innerText = '';
+      loading.style.display = 'block';
 
       const formData = new FormData();
-      formData.append('file', selectedFile);
+      formData.append('file', uploadedFile);
 
       try {
         const response = await fetch('https://book-summarizer-backend.onrender.com/upload', {
           method: 'POST',
-          body: formData
+          body: formData,
         });
 
         const data = await response.json();
-        document.getElementById('loading').style.display = 'none';
 
+        loading.style.display = 'none';
         if (data.summary) {
-          document.getElementById('summary').innerText = data.summary;
+          summaryText.textContent = data.summary;
+          summaryModal.style.display = 'flex';
         } else {
-          document.getElementById('summary').innerText = 'No summary received.';
+          alert('Failed to summarize the book.');
         }
       } catch (error) {
-        document.getElementById('loading').style.display = 'none';
-        document.getElementById('summary').innerText = 'An error occurred while summarizing.';
-        console.error('Error:', error);
+        loading.style.display = 'none';
+        alert('An error occurred. Please try again.');
+      }
+    });
+
+    closeModal.addEventListener('click', () => {
+      summaryModal.style.display = 'none';
+    });
+
+    window.onclick = function(event) {
+      if (event.target == summaryModal) {
+        summaryModal.style.display = 'none';
       }
     }
   </script>
