@@ -111,25 +111,26 @@
       background:var(--fg);
       color:var(--bg-start);
     }
-    .primary-btn {
+    /* Summarize button now matches segmented and sample style */
+    #summarize-btn {
       width:100%; padding:1rem;
       margin-top:0;
-      background:var(--fg);
-      color:var(--bg-start);
+      background: var(--window-bg);
       border:1px solid var(--fg);
+      color: var(--fg);
       border-radius:6px;
       font-size:1.2rem; font-weight:700;
       cursor:pointer;
-      transition:transform .1s,box-shadow .2s,opacity .2s;
+      transition:background .2s,transform .1s;
     }
-    .primary-btn:hover {
-      transform:scale(1.02);
-      box-shadow:0 4px 12px rgba(255,255,255,0.2);
+    #summarize-btn:hover {
+      background: rgba(255,255,255,0.1);
+      transform: scale(1.02);
     }
-    .primary-btn:active {
-      transform:scale(.98);
+    #summarize-btn:active {
+      transform: scale(.98);
     }
-    .primary-btn:disabled {
+    #summarize-btn:disabled {
       opacity:.5; cursor:not-allowed;
     }
     .secondary-btn {
@@ -206,16 +207,16 @@
     }
     .modal-footer button {
       padding:.75rem 1.25rem;
-      background:var(--fg);
-      color:var(--bg-start);
+      background:var(--window-bg);
       border:1px solid var(--fg);
+      color:var(--fg);
       border-radius:4px;
       font-size:1rem; cursor:pointer;
-      transition:transform .1s,box-shadow .2s;
+      transition:background .2s,transform .1s;
     }
     .modal-footer button:hover {
+      background:rgba(255,255,255,0.1);
       transform:scale(1.02);
-      box-shadow:0 4px 12px rgba(255,255,255,0.2);
     }
     footer {
       position:fixed; bottom:0; left:50%;
@@ -255,7 +256,7 @@
       <button class="length-btn" data-length="long">Long</button>
     </div>
 
-    <button id="summarize-btn" class="primary-btn" disabled>Summarize</button>
+    <button id="summarize-btn" disabled>Summarize</button>
     <button class="secondary-btn" onclick="window.location='sample.pdf'">Sample PDF</button>
   </div>
 
