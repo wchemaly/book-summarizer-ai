@@ -69,9 +69,7 @@
       fill: var(--fg);
     }
     #drop-zone input {
-      position: absolute; top:0; left:0;
-      width:100%; height:100%; opacity:0;
-      cursor:pointer;
+      display: none;
     }
     .microcopy {
       font-size: .85rem;
@@ -97,7 +95,7 @@
     }
     .controls {
       display: flex; gap: .6rem; width:100%;
-      margin-top: .25rem;
+      margin-top: 0;
     }
     .length-btn {
       flex:1; padding:.6rem;
@@ -278,91 +276,90 @@
   <footer>© 2025 | Built by You</footer>
 
   <script>
-    const dz = document.getElementById('drop-zone'),
-          fi = document.getElementById('file-input'),
-          fo = document.getElementById('file-info'),
-          cb = document.getElementById('clear-btn'),
-          lb = document.querySelectorAll('.length-btn'),
-          sb = document.getElementById('summarize-btn'),
-          lo = document.getElementById('loading-overlay'),
-          md = document.getElementById('summary-modal'),
-          mc = document.getElementById('modal-close'),
-          sc = document.getElementById('summary-content'),
-          cp = document.getElementById('copy-btn'),
-          dl = document.getElementById('download-btn');
-    let file, sum, len = 'medium';
+    const dropZone    = document.getElementById('drop-zone');
+    const fileInput   = document.getElementById('file-input');
+    const fileInfo    = document.getElementById('file-info');
+    const clearBtn    = document.getElementById('clear-btn');
+    const lengthBtns  = document.querySelectorAll('.length-btn');
+    const summarizeBtn= document.getElementById('summarize-btn');
+    const loadingOv   = document.getElementById('loading-overlay');
+    const summaryModal= document.getElementById('summary-modal');
+    const modalClose  = document.getElementById('modal-close');
+    const summaryBody = document.getElementById('summary-content');
+    const copyBtn     = document.getElementById('copy-btn');
+    const dlBtn       = document.getElementById('download-btn');
+    let selectedFile, lastSummary, summaryLength='medium';
 
-    function handleFile(f) {
-      file = f;
-      fo.textContent = `📄 ${f.name} (${(f.size/1e6).toFixed(2)} MB)`;
-      sb.disabled = false;
-      cb.style.visibility = 'visible';
+    function handleFile(file) {
+      selectedFile = file;
+      fileInfo.textContent = `📄 ${file.name} (${(file.size/1e6).toFixed(2)} MB)`;
+      summarizeBtn.disabled = false;
+      clearBtn.style.visibility = 'visible';
     }
 
-    ['dragenter','dragover'].forEach(e =>
-      dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.add('dragover'); })
+    ['dragenter','dragover'].forEach(evt =>
+      dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.add('dragover'); })
     );
-    ['dragleave','drop'].forEach(e =>
-      dz.addEventListener(e, ev => { ev.preventDefault(); dz.classList.remove('dragover'); })
+    ['dragleave','drop'].forEach(evt =>
+      dropZone.addEventListener(evt, e => { e.preventDefault(); dropZone.classList.remove('dragover'); })
     );
-    dz.addEventListener('drop', ev => {
-      if (ev.dataTransfer.files.length) handleFile(ev.dataTransfer.files[0]);
+    dropZone.addEventListener('drop', e => {
+      if(e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
     });
-    dz.addEventListener('click', () => fi.click());
-    fi.addEventListener('change', () => {
-      if (fi.files.length) handleFile(fi.files[0]);
+    fileInput.addEventListener('change', () => {
+      if(fileInput.files.length) handleFile(fileInput.files[0]);
     });
 
-    cb.addEventListener('click', () => {
-      file = null; fi.value = ''; fo.textContent = '';
-      sb.disabled = true; cb.style.visibility = 'hidden';
+    clearBtn.addEventListener('click', () => {
+      selectedFile = null;
+      fileInput.value = '';
+      fileInfo.textContent = '';
+      clearBtn.style.visibility = 'hidden';
+      summarizeBtn.disabled = true;
     });
 
-    lb.forEach(btn => btn.addEventListener('click', () => {
-      lb.forEach(x => x.classList.remove('active'));
+    lengthBtns.forEach(btn => btn.addEventListener('click', () => {
+      lengthBtns.forEach(b => b.classList.remove('active'));
       btn.classList.add('active');
-      len = btn.dataset.length;
+      summaryLength = btn.dataset.length;
     }));
 
-    sb.addEventListener('click', async () => {
-      if (!file) return;
-      sb.disabled = true;
-      lo.classList.add('show');
-      sc.textContent = '';
-      md.classList.remove('show');
-
+    summarizeBtn.addEventListener('click', async () => {
+      if(!selectedFile) return;
+      summarizeBtn.disabled = true;
+      loadingOv.classList.add('show');
+      summaryBody.textContent = '';
+      summaryModal.classList.remove('show');
       const fd = new FormData();
-      fd.append('file', file);
-      fd.append('length', len);
-
+      fd.append('file', selectedFile);
+      fd.append('length', summaryLength);
       try {
-        const res = await fetch('https://book-summarizer-backend.onrender.com/upload', {
-          method: 'POST',
-          body: fd
+        const res = await fetch('https://book-summarizer-backend.onrender.com/upload',{
+          method:'POST', body:fd
         });
         const data = await res.json();
-        sum = data.summary || data.excerpt || 'No summary available.';
-        sc.textContent = sum;
-        md.classList.add('show');
-      } catch (e) {
+        lastSummary = data.summary||data.excerpt||'No summary available.';
+        summaryBody.textContent = lastSummary;
+        summaryModal.classList.add('show');
+      } catch(e) {
         console.error(e);
       } finally {
-        lo.classList.remove('show');
-        sb.disabled = false;
+        loadingOv.classList.remove('show');
+        summarizeBtn.disabled = false;
       }
     });
 
-    mc.addEventListener('click', () => md.classList.remove('show'));
-    window.addEventListener('click', e => { if (e.target === md) md.classList.remove('show'); });
-    window.addEventListener('keydown', e => { if (e.key === 'Escape') md.classList.remove('show'); });
+    modalClose.addEventListener('click', () => summaryModal.classList.remove('show'));
+    window.addEventListener('click', e => { if(e.target===summaryModal) summaryModal.classList.remove('show'); });
+    window.addEventListener('keydown', e => { if(e.key==='Escape') summaryModal.classList.remove('show'); });
 
-    cp.addEventListener('click', () => navigator.clipboard.writeText(sum));
-    dl.addEventListener('click', () => {
-      const blob = new Blob([sum], { type: 'text/plain' }),
-            url  = URL.createObjectURL(blob),
-            a    = document.createElement('a');
+    copyBtn.addEventListener('click', () => navigator.clipboard.writeText(lastSummary));
+    dlBtn.addEventListener('click', () => {
+      const blob = new Blob([lastSummary],{type:'text/plain'});
+      const url  = URL.createObjectURL(blob);
+      const a    = document.createElement('a');
       a.href     = url;
-      a.download = (file?.name || 'summary') + '.txt';
+      a.download = (selectedFile?.name||'summary')+'.txt';
       a.click();
       URL.revokeObjectURL(url);
     });
